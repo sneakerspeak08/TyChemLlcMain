@@ -9,9 +9,9 @@ interface Stat {
 
 const stats: Stat[] = [
   { value: 20, label: "Years of Experience", suffix: "+" },
-  { value: 500, label: "Successful Transactions", suffix: "+" },
+  { value: 500000, label: "Pounds of Chemicals Saved Per Month", suffix: "+" },
   { value: 30, label: "Countries Served", suffix: "+" },
-  { value: 250, label: "Types of Chemicals Handled", suffix: "+" },
+  { value: 1000, label: "Types of Chemicals Handled", suffix: "+" },
 ];
 
 const Stats = () => {
@@ -65,7 +65,7 @@ const Stats = () => {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50">
+    <section id="stats" className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           ref={ref}
@@ -83,7 +83,7 @@ const Stats = () => {
               <div className="flex flex-col items-center text-center">
                 <div className="flex items-baseline mb-2">
                   <span className="text-4xl md:text-5xl font-bold text-green-600">
-                    {counts[index]}
+                    {counts[index].toLocaleString()}
                   </span>
                   {stat.suffix && (
                     <span className="text-xl md:text-2xl font-medium text-green-600 ml-1">

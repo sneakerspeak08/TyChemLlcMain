@@ -9,6 +9,7 @@ import ChemicalList from "@/components/ChemicalList";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
+import ChemicalTicker from "@/components/ChemicalTicker";
 
 const Index = () => {
   useEffect(() => {
@@ -61,6 +62,7 @@ const Index = () => {
       </main>
       <Footer />
       <ScrollToTop />
+      <ChemicalTicker />
     </motion.div>
   );
 };

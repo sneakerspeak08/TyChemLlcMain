@@ -1,29 +1,28 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OfferDialog } from "./OfferDialog";
 import { Chemical, chemicals, categories } from "@/data/products";
 
 const ChemicalList = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
-  const filteredChemicals = chemicals.filter(chemical => {
-    const matchesSearch = 
-      chemical.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      chemical.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      chemical.cas.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || chemical.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Get only the last 2 chemicals
+  const latestChemicals = chemicals.slice(-2);
 
-  const handleOpenOfferDialog = (chemical: Chemical) => {
+  const handleOpenOfferDialog = (e: React.MouseEvent, chemical: Chemical) => {
+    e.stopPropagation();
     setSelectedChemical(chemical);
     setIsOfferDialogOpen(true);
+  };
+
+  const handleCardClick = (chemical: Chemical) => {
+    navigate(`/products/${chemical.cas}`);
   };
 
   return (
@@ -32,64 +31,26 @@ const ChemicalList = () => {
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-block mb-6 px-3 py-1 rounded-full bg-tychem-50 border border-tychem-100">
-              <p className="text-sm font-medium text-tychem-700">Featured Products</p>
+              <p className="text-sm font-medium text-tychem-700">Latest Products</p>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
-              Available Chemicals
+              Recently Added Chemicals
             </h2>
             <p className="text-lg text-gray-600">
-              Browse a selection of our available chemicals. Visit our products page for our complete inventory.
+              Check out our latest available chemicals. Visit our products page for our complete inventory.
             </p>
           </div>
 
-          <div className="mb-12">
-            <div className="flex flex-col gap-6 max-w-4xl mx-auto">
-              <div className="flex w-full gap-2">
-                <div className="relative flex-1">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Search className="h-5 w-5" />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Search by name, CAS number, or description..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 h-12 bg-white border-gray-200"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={!selectedCategory ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(null)}
-                  className={!selectedCategory ? "bg-tychem-500 hover:bg-tychem-600" : ""}
-                >
-                  All Categories
-                </Button>
-                {categories.map((category) => (
-                  <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    onClick={() => setSelectedCategory(category)}
-                    className={selectedCategory === category ? "bg-tychem-500 hover:bg-tychem-600" : ""}
-                  >
-                    {category}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredChemicals.map((chemical) => (
+            {latestChemicals.map((chemical) => (
               <motion.div
                 key={chemical.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
-                className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+                onClick={() => handleCardClick(chemical)}
+                className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -119,7 +80,7 @@ const ChemicalList = () => {
                   <Button 
                     variant="outline" 
                     className="text-tychem-600 hover:text-tychem-700"
-                    onClick={() => handleOpenOfferDialog(chemical)}
+                    onClick={(e) => handleOpenOfferDialog(e, chemical)}
                   >
                     Send Offer
                   </Button>

@@ -1,18 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { OfferDialog } from "@/components/OfferDialog";
 import { Chemical, chemicals, categories } from "@/data/products";
+import ProductSchema from "@/components/ProductSchema";
 
 const ProductsPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    const selectedChemicalId = location.state?.selectedChemicalId;
+    if (selectedChemicalId) {
+      const chemical = chemicals.find(c => c.id === selectedChemicalId);
+      if (chemical) {
+        setSelectedChemical(chemical);
+        setIsOfferDialogOpen(true);
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state]);
 
   const filteredChemicals = chemicals.filter(chemical => {
     const matchesSearch = 
@@ -23,9 +43,14 @@ const ProductsPage = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleOpenOfferDialog = (chemical: Chemical) => {
+  const handleOpenOfferDialog = (e: React.MouseEvent, chemical: Chemical) => {
+    e.stopPropagation(); // Prevent card click when clicking offer button
     setSelectedChemical(chemical);
     setIsOfferDialogOpen(true);
+  };
+
+  const handleCardClick = (chemical: Chemical) => {
+    navigate(`/products/${chemical.cas}`);
   };
 
   return (
@@ -91,8 +116,10 @@ const ProductsPage = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+                  onClick={() => handleCardClick(chemical)}
+                  className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 >
+                  <ProductSchema product={chemical} />
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-tychem-50 text-tychem-700 mb-2">
@@ -121,7 +148,7 @@ const ProductsPage = () => {
                     <Button 
                       variant="outline" 
                       className="text-tychem-600 hover:text-tychem-700"
-                      onClick={() => handleOpenOfferDialog(chemical)}
+                      onClick={(e) => handleOpenOfferDialog(e, chemical)}
                     >
                       Send Offer
                     </Button>

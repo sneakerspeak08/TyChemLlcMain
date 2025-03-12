@@ -45,11 +45,11 @@ const Hero = () => {
       </div>
 
       {/* Globe Container */}
-      <div className="absolute top-1/2 left-[50%] -translate-y-1/2">
-        <div className="relative w-[600px] h-[600px] sm:w-[700px] sm:h-[700px] md:w-[800px] md:h-[800px] opacity-50 sm:opacity-100">
+      <div className="absolute top-1/2 left-1/2 -translate-y-1/2">
+        <div className="relative w-[400px] h-[400px] sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] lg:w-[700px] lg:h-[700px] opacity-50 sm:opacity-100">
           <Globe config={{
-            width: 800,
-            height: 800,
+            width: 700,
+            height: 700,
             phi: 0,
             theta: 0.3,
             dark: 1,

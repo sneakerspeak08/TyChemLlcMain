@@ -8,7 +8,7 @@ const Footer = () => {
     <footer className="bg-black text-gray-300">
       <div className="container mx-auto px-4 md:px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {/* Existing grid content */}
+          {/* Company Info */}
           <div className="space-y-6">
             <div className="flex items-center">
               <span className="text-2xl font-bold text-white tracking-tight">
@@ -43,6 +43,7 @@ const Footer = () => {
             </div>
           </div>
           
+          {/* Services */}
           <div>
             <h3 className="text-white text-lg font-semibold mb-6">Services</h3>
             <ul className="space-y-4">
@@ -73,6 +74,7 @@ const Footer = () => {
             </ul>
           </div>
           
+          {/* Company */}
           <div>
             <h3 className="text-white text-lg font-semibold mb-6">Company</h3>
             <ul className="space-y-4">
@@ -103,6 +105,7 @@ const Footer = () => {
             </ul>
           </div>
           
+          {/* Contact Info */}
           <div>
             <h3 className="text-white text-lg font-semibold mb-6">Contact Us</h3>
             <p className="text-gray-400 mb-4">
@@ -114,25 +117,10 @@ const Footer = () => {
                 Sales@tychem.net
               </a>
             </p>
-            <form className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent flex-grow"
-                />
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg whitespace-nowrap"
-                >
-                  Subscribe
-                </motion.button>
-              </div>
-            </form>
           </div>
         </div>
         
+        {/* Bottom Section */}
         <div className="mt-16 pt-8 border-t border-gray-800 text-center">
           <div className="flex flex-col items-center justify-center space-y-4">
             <p className="text-gray-500">
