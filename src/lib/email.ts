@@ -24,8 +24,8 @@ const submitToWeb3Forms = async (formData: FormData, type: 'contact' | 'offer') 
   try {
     const form = new FormData();
     
-    // Web3Forms access key (you'll need to get this from https://web3forms.com)
-    form.append('access_key', 'YOUR_WEB3FORMS_ACCESS_KEY'); // Replace with actual key
+    // Web3Forms access key
+    form.append('access_key', '1ead06e8-908d-4fab-87d8-6aed2a25e77b');
     
     // Add recipient
     form.append('email', 'ty@tychem.net');
