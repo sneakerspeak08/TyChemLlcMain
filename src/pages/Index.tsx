@@ -47,15 +47,16 @@ const Index = () => {
     };
   }, []);
 
-  // Handle scrolling to contact section when navigated from products page
+  // Handle scrolling to specific sections when navigated from other pages
   useEffect(() => {
-    if (location.state?.scrollToContact) {
+    const scrollToSection = location.state?.scrollToSection;
+    if (scrollToSection) {
       // Small delay to ensure the page has loaded
       setTimeout(() => {
-        const contactSection = document.getElementById('contact');
-        if (contactSection) {
+        const element = document.getElementById(scrollToSection);
+        if (element) {
           const offset = 80; // Height of the fixed navbar
-          const elementPosition = contactSection.getBoundingClientRect().top;
+          const elementPosition = element.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - offset;
 
           window.scrollTo({

@@ -13,6 +13,7 @@ const navLinks: NavLink[] = [
   { label: "Home", href: "/" },
   { label: "Products", href: "/products" },
   { label: "About", href: "/#about" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 interface NavbarProps {
@@ -34,21 +35,33 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href.startsWith("/#")) {
-      e.preventDefault();
-      const element = document.querySelector(href.substring(1));
-      if (element) {
-        const offset = 80; // Height of the fixed navbar
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth"
-        });
-      }
-    }
+    e.preventDefault();
     setIsMenuOpen(false);
+
+    if (href.startsWith("/#")) {
+      const sectionId = href.substring(2); // Remove "/#" to get section id
+      
+      if (location.pathname === '/') {
+        // Already on home page, just scroll to section
+        const element = document.getElementById(sectionId);
+        if (element) {
+          const offset = 80; // Height of the fixed navbar
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+          });
+        }
+      } else {
+        // On different page, navigate to home with section target
+        navigate('/', { state: { scrollToSection: sectionId } });
+      }
+    } else {
+      // Regular navigation
+      navigate(href);
+    }
   };
 
   const handleHomeClick = (e: React.MouseEvent) => {
@@ -64,6 +77,29 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
       navigate('/');
     }
     setIsMenuOpen(false);
+  };
+
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsMenuOpen(false);
+    
+    if (location.pathname === '/') {
+      // Already on home page, just scroll to contact section
+      const element = document.getElementById('contact');
+      if (element) {
+        const offset = 80; // Height of the fixed navbar
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }
+    } else {
+      // On different page, navigate to home with contact target
+      navigate('/', { state: { scrollToSection: 'contact' } });
+    }
   };
 
   const getHeaderBackground = () => {
@@ -110,7 +146,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
               <Button
                 variant="outline"
                 className="hidden md:flex items-center bg-transparent text-white border-white hover:bg-white hover:text-black transition-colors duration-300"
-                onClick={(e) => handleNavClick(e as any, "/#contact")}
+                onClick={handleContactClick}
               >
                 Contact Us
                 <ChevronRight className="ml-1 h-4 w-4" />
@@ -187,7 +223,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
               <div className="mt-auto pb-10">
                 <Button
                   className="w-full my-6 py-6 text-lg bg-white text-black hover:bg-white/90"
-                  onClick={(e) => handleNavClick(e as any, "/#contact")}
+                  onClick={handleContactClick}
                 >
                   Contact Us
                 </Button>
