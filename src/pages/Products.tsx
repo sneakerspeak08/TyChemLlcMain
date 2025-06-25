@@ -49,6 +49,10 @@ const ProductsPage = () => {
     navigate(`/products/${chemical.name.toLowerCase().replace(/\s+/g, '-')}`);
   };
 
+  const handleContactClick = () => {
+    navigate('/#contact');
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gray-50">
@@ -122,14 +126,14 @@ const ProductsPage = () => {
             </div>
 
             <div className="text-center mt-12">
-              <motion.a
-                href="#contact"
+              <motion.button
+                onClick={handleContactClick}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="inline-flex items-center px-8 py-4 bg-tychem-500 text-white rounded-lg font-medium transition-all duration-300 hover:bg-tychem-600"
               >
                 Contact Us for Availability
-              </motion.a>
+              </motion.button>
             </div>
           </div>
         </main>
