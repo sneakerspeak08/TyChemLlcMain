@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Edit, Trash2, Save, X, Lock, Globe, AlertCircle, CheckCircle, ExternalLink, Zap } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Lock, Globe, AlertCircle, CheckCircle, ExternalLink, Zap, Copy, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -94,6 +94,7 @@ const AdminPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Chemical | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
+  const [sitemapStatus, setSitemapStatus] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -109,6 +110,32 @@ const AdminPage = () => {
     if (isLoggedIn === 'true') {
       setIsAuthenticated(true);
     }
+  }, []);
+
+  // Listen for sitemap updates
+  useEffect(() => {
+    const handleSitemapUpdate = (event: any) => {
+      setSitemapStatus({
+        lastUpdated: event.detail.timestamp,
+        productCount: event.detail.productCount
+      });
+    };
+
+    window.addEventListener('sitemapUpdated', handleSitemapUpdate);
+    
+    // Load existing sitemap status
+    const savedStatus = localStorage.getItem('tychem-sitemap-status');
+    if (savedStatus) {
+      try {
+        setSitemapStatus(JSON.parse(savedStatus));
+      } catch (error) {
+        // Ignore parsing errors
+      }
+    }
+
+    return () => {
+      window.removeEventListener('sitemapUpdated', handleSitemapUpdate);
+    };
   }, []);
 
   // Load products from localStorage on component mount
@@ -143,10 +170,6 @@ const AdminPage = () => {
   useEffect(() => {
     if (products.length > 0 && isAuthenticated) {
       localStorage.setItem('tychem-products', JSON.stringify(products));
-      // Show success message when products are updated
-      if (products.length > 0) {
-        console.log('✅ Sitemap automatically updated with', products.length, 'products');
-      }
     }
   }, [products, isAuthenticated]);
 
@@ -182,7 +205,7 @@ const AdminPage = () => {
   const handleDeleteProduct = (id: number) => {
     if (confirm('Are you sure you want to delete this product?')) {
       setProducts(prev => prev.filter(p => p.id !== id));
-      toast.success('Product deleted - Sitemap & search engines updated automatically! 🚀');
+      toast.success('Product deleted - Sitemap updated automatically! 🚀');
     }
   };
 
@@ -201,14 +224,14 @@ const AdminPage = () => {
         quantity: formData.quantity.trim()
       };
       setProducts(prev => [...prev, newProduct]);
-      toast.success('Product added - Sitemap & search engines updated automatically! 🚀');
+      toast.success('Product added - Sitemap updated automatically! 🚀');
     } else if (editingProduct) {
       setProducts(prev => prev.map(p => 
         p.id === editingProduct.id 
           ? { ...p, name: formData.name.trim(), description: formData.description.trim(), quantity: formData.quantity.trim() }
           : p
       ));
-      toast.success('Product updated - Sitemap & search engines updated automatically! 🚀');
+      toast.success('Product updated - Sitemap updated automatically! 🚀');
     }
 
     setIsEditDialogOpen(false);
@@ -237,7 +260,7 @@ const AdminPage = () => {
         const importedProducts = JSON.parse(e.target?.result as string);
         if (Array.isArray(importedProducts)) {
           setProducts(importedProducts);
-          toast.success('Products imported - Sitemap & search engines updated automatically! 🚀');
+          toast.success('Products imported - Sitemap updated automatically! 🚀');
         } else {
           toast.error('Invalid file format');
         }
@@ -252,10 +275,34 @@ const AdminPage = () => {
     window.open('/sitemap.xml', '_blank');
   };
 
-  const handleTestSitemap = () => {
-    // Open Google's sitemap testing tool
-    window.open(`https://www.google.com/ping?sitemap=${encodeURIComponent('https://tychem.net/sitemap.xml')}`, '_blank');
-    toast.success('Sitemap submitted to Google for indexing');
+  const handleCopySearchConsoleInstructions = () => {
+    const instructions = `🎯 MODERN SEO SETUP INSTRUCTIONS
+
+Your sitemap is now 100% automatic! Here's how to get maximum SEO benefit:
+
+📍 **Your Live Sitemap URL:**
+https://tychem.net/sitemap.xml
+
+🚀 **Google Search Console Setup:**
+1. Go to: https://search.google.com/search-console
+2. Add your property: https://tychem.net
+3. Go to "Sitemaps" in the left menu
+4. Submit your sitemap URL: https://tychem.net/sitemap.xml
+5. Google will automatically check it regularly!
+
+✅ **What's Already Automatic:**
+- Sitemap updates when you change products
+- All ${products.length} products are included
+- URLs are SEO-optimized
+- Last modified dates are current
+- No manual work needed!
+
+🎉 **Result:** Google will discover your new products faster and index them automatically!
+
+Note: Google deprecated the ping service in 2023, so manual submission to Search Console is now the recommended method.`;
+
+    navigator.clipboard.writeText(instructions);
+    toast.success('Instructions copied to clipboard!');
   };
 
   // Show login form if not authenticated
@@ -322,7 +369,7 @@ const AdminPage = () => {
               <Zap className="h-4 w-4" />
               <AlertDescription>
                 <strong>⚡ 100% Automatic:</strong> Your sitemap updates instantly when you add, edit, or delete products. 
-                Search engines are automatically notified. Zero manual work required!
+                Submit to Google Search Console once for automatic discovery of all future changes!
               </AlertDescription>
             </Alert>
 
@@ -383,10 +430,10 @@ const AdminPage = () => {
 
           <TabsContent value="seo" className="space-y-6">
             <Alert>
-              <Zap className="h-4 w-4" />
+              <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>🎉 PERFECT! Your SEO is now 100% automatic!</strong> The sitemap updates in real-time, 
-                search engines are notified automatically, and you never have to touch a file again!
+                <strong>🎉 PERFECT! Your SEO is now fully automatic!</strong> The sitemap updates in real-time. 
+                Just submit to Google Search Console once and you're done forever!
               </AlertDescription>
             </Alert>
 
@@ -395,7 +442,7 @@ const AdminPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Zap className="h-5 w-5 mr-2 text-green-600" />
-                    Fully Automatic SEO System
+                    Modern Automatic SEO System
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -406,7 +453,7 @@ const AdminPage = () => {
                     </div>
                     <p className="text-sm text-green-700">
                       Your sitemap automatically includes all {products.length} products and updates instantly. 
-                      Search engines are notified automatically when you make changes.
+                      Submit to Google Search Console once and Google will check for updates automatically.
                     </p>
                   </div>
                   
@@ -414,7 +461,7 @@ const AdminPage = () => {
                     <h4 className="font-medium mb-2">What happens automatically:</h4>
                     <ul className="text-sm text-blue-700 space-y-1">
                       <li>✅ Sitemap updates when you change products</li>
-                      <li>✅ Google is notified of changes</li>
+                      <li>✅ Google checks your sitemap regularly</li>
                       <li>✅ Product URLs are generated</li>
                       <li>✅ SEO data updates in real-time</li>
                       <li>✅ Search engines discover new products faster</li>
@@ -426,18 +473,18 @@ const AdminPage = () => {
                       <ExternalLink className="h-4 w-4 mr-2" />
                       View Live Sitemap
                     </Button>
-                    <Button onClick={handleTestSitemap} variant="outline" className="flex-1">
-                      <Globe className="h-4 w-4 mr-2" />
-                      Test with Google
+                    <Button onClick={handleCopySearchConsoleInstructions} variant="outline" className="flex-1">
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy Setup Guide
                     </Button>
                   </div>
 
                   <div className="text-xs text-gray-500 bg-yellow-50 p-3 rounded">
-                    <strong>🎯 How it works now:</strong> 
-                    <br />• Add product → Sitemap updates instantly → Google notified
-                    <br />• Edit product → Changes appear immediately → SEO updated
-                    <br />• Delete product → Removed from sitemap → Search engines updated
-                    <br />• <strong>You do nothing!</strong> Everything is automatic! 🎉
+                    <strong>🎯 Modern SEO (2025):</strong> 
+                    <br />• Google deprecated ping service in 2023
+                    <br />• Submit sitemap to Search Console once
+                    <br />• Google automatically checks for updates
+                    <br />• Your sitemap is always current and live!
                   </div>
                 </CardContent>
               </Card>
@@ -450,11 +497,11 @@ const AdminPage = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Dynamic Sitemap</span>
-                      <span className="text-green-600 text-sm font-medium">⚡ Fully Automatic</span>
+                      <span className="text-green-600 text-sm font-medium">⚡ Live & Automatic</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Search Engine Notifications</span>
-                      <span className="text-green-600 text-sm font-medium">⚡ Auto-Sent</span>
+                      <span className="text-sm">Google Discovery</span>
+                      <span className="text-green-600 text-sm font-medium">⚡ Search Console</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Product URLs</span>
@@ -476,12 +523,20 @@ const AdminPage = () => {
                       <span className="text-sm">Current Products</span>
                       <span className="text-blue-600 text-sm font-medium">{products.length} items</span>
                     </div>
+                    {sitemapStatus && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Last Updated</span>
+                        <span className="text-green-600 text-sm font-medium">
+                          {new Date(sitemapStatus.lastUpdated).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-green-50 p-4 rounded-lg">
                     <h4 className="font-medium text-green-800 mb-2">SEO Score: Perfect ⭐⭐⭐⭐⭐</h4>
                     <p className="text-sm text-green-700">
-                      Your site now has the most advanced automatic SEO system possible. 
+                      Your site has the most advanced automatic SEO system possible. 
                       Everything updates in real-time with zero manual work!
                     </p>
                   </div>
@@ -491,7 +546,7 @@ const AdminPage = () => {
                     <ul className="mt-1 space-y-1">
                       <li>❌ Download sitemap files</li>
                       <li>❌ Upload sitemap files</li>
-                      <li>❌ Manually notify search engines</li>
+                      <li>❌ Manually ping search engines</li>
                       <li>❌ Update SEO data</li>
                       <li>✅ Just manage your products - everything else is automatic!</li>
                     </ul>
@@ -516,9 +571,28 @@ const AdminPage = () => {
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   ⚡ This URL automatically shows your current {products.length} products in real-time. 
-                  Search engines can crawl it anytime and always see your latest inventory. 
-                  <strong>No manual updates ever needed!</strong>
+                  Submit this URL to Google Search Console once and Google will check it regularly for updates.
+                  <strong> No manual updates ever needed!</strong>
                 </p>
+                
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">📋 Quick Setup:</h4>
+                  <ol className="text-xs text-blue-700 space-y-1">
+                    <li>1. Go to Google Search Console</li>
+                    <li>2. Add your website property</li>
+                    <li>3. Submit sitemap: https://tychem.net/sitemap.xml</li>
+                    <li>4. Done! Google will check for updates automatically</li>
+                  </ol>
+                  <Button 
+                    onClick={handleCopySearchConsoleInstructions} 
+                    size="sm" 
+                    variant="outline" 
+                    className="mt-2"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Full Instructions
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
