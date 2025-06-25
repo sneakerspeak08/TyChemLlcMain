@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { OfferDialog } from "@/components/OfferDialog";
 import { Chemical } from "@/data/products";
 import { useProducts } from "@/hooks/useProducts";
+import SEOProductData from "@/components/SEOProductData";
 
 const ProductsPage = () => {
   const location = useLocation();
@@ -58,6 +59,7 @@ const ProductsPage = () => {
 
   return (
     <>
+      <SEOProductData />
       <div className="min-h-screen bg-gray-50">
         <Navbar transparent={false} />
         

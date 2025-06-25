@@ -11,6 +11,7 @@ import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import ChemicalTicker from "@/components/ChemicalTicker";
+import SEOProductData from "@/components/SEOProductData";
 
 const Index = () => {
   const location = useLocation();
@@ -78,6 +79,7 @@ const Index = () => {
       transition={{ duration: 0.5 }}
       className="min-h-screen"
     >
+      <SEOProductData />
       <Navbar />
       <main>
         <Hero />

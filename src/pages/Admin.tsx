@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,84 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { Chemical } from "@/data/products";
 
+const ADMIN_PASSWORD = "tychem2025"; // Change this to your desired password
+
+const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate a small delay for security
+    setTimeout(() => {
+      if (password === ADMIN_PASSWORD) {
+        onLogin();
+        toast.success("Welcome to admin panel");
+      } else {
+        toast.error("Invalid password");
+        setPassword("");
+      }
+      setIsLoading(false);
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <div className="bg-tychem-50 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <Lock className="h-8 w-8 text-tychem-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Access</h1>
+          <p className="text-gray-600 mt-2">Enter password to access the admin panel</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter admin password"
+              className="w-full"
+              required
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-tychem-500 hover:bg-tychem-600"
+          >
+            {isLoading ? "Verifying..." : "Access Admin Panel"}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <a
+            href="/"
+            className="text-sm text-tychem-600 hover:text-tychem-700 transition-colors"
+          >
+            ← Back to Website
+          </a>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const AdminPage = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [products, setProducts] = useState<Chemical[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Chemical | null>(null);
@@ -20,8 +97,18 @@ const AdminPage = () => {
     quantity: ""
   });
 
+  // Check if user is already authenticated (session storage)
+  useEffect(() => {
+    const isLoggedIn = sessionStorage.getItem('tychem-admin-auth');
+    if (isLoggedIn === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   // Load products from localStorage on component mount
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const savedProducts = localStorage.getItem('tychem-products');
     if (savedProducts) {
       setProducts(JSON.parse(savedProducts));
@@ -44,16 +131,27 @@ const AdminPage = () => {
       setProducts(defaultProducts);
       localStorage.setItem('tychem-products', JSON.stringify(defaultProducts));
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Save products to localStorage whenever products change
   useEffect(() => {
-    if (products.length > 0) {
+    if (products.length > 0 && isAuthenticated) {
       localStorage.setItem('tychem-products', JSON.stringify(products));
       // Also update the products.ts file content for persistence
       updateProductsFile(products);
     }
-  }, [products]);
+  }, [products, isAuthenticated]);
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    sessionStorage.setItem('tychem-admin-auth', 'true');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('tychem-admin-auth');
+    toast.success("Logged out successfully");
+  };
 
   const updateProductsFile = (updatedProducts: Chemical[]) => {
     // This would ideally update the actual file, but for now we'll use localStorage
@@ -148,12 +246,23 @@ const AdminPage = () => {
     reader.readAsText(file);
   };
 
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Product Management</h1>
+          <div>
+            <h1 className="text-3xl font-bold">Product Management</h1>
+            <p className="text-gray-600 mt-1">Manage your chemical inventory</p>
+          </div>
           <div className="flex gap-4">
+            <Button onClick={handleLogout} variant="outline" className="text-red-600 hover:text-red-700">
+              Logout
+            </Button>
             <Button onClick={handleExportData} variant="outline">
               Export Data
             </Button>
