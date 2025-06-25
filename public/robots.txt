@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Dynamic Sitemap - Updates automatically with inventory
 Sitemap: https://tychem.net/sitemap.xml
 
 # Crawl-delay
