@@ -1,2 +1,10 @@
-# Netlify redirects for automatic sitemap
+# Netlify redirects and rewrites
+# Handle SPA routing - redirect all non-file requests to index.html
+/*    /index.html   200
+
+# Specific redirects for sitemap
 /sitemap.xml /sitemap.xml 200
+
+# Admin route specifically (this ensures /admin works)
+/admin /index.html 200
+/admin/* /index.html 200
