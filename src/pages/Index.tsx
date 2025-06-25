@@ -17,6 +17,16 @@ const Index = () => {
   const location = useLocation();
 
   useEffect(() => {
+    // Set page title and meta description
+    document.title = "Tychem LLC - Surplus Chemical Brokers Since 2001 | Industrial Chemicals";
+    
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 
+        'Leading surplus chemical broker since 2001. Buy and sell industrial chemicals including sodium hydroxide, citric acid, glycerin, and more. Save money while protecting the environment.'
+      );
+    }
+
     // Initialize scroll animations
     const scrollElements = document.querySelectorAll(".scroll-trigger-fade-in");
     

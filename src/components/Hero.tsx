@@ -29,16 +29,20 @@ const Hero = () => {
             >
               Save The Earth, Sell Us Your Unwanted Chemicals.
             </h1>
-            <p className="text-lg md:text-xl text-white/80 mb-8">
+            <p className="text-lg md:text-xl text-white/80 mb-2">
               Surplus Chemical Brokers, Since 2001.
+            </p>
+            <p className="text-base md:text-lg text-white/70 mb-8">
+              Turn your chemical waste into profit while protecting the environment. We buy surplus chemicals of all sizes - from small lots to rail cars.
             </p>
             <motion.a
               href="#contact"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="inline-flex px-6 sm:px-8 py-3 sm:py-4 text-white font-medium text-center transition-all duration-300 bg-[#3b9460] rounded-md hover:bg-[#3b9460]/90"
+              aria-label="Contact Tychem LLC for chemical disposal services"
             >
-              Contact Us
+              Get Free Quote
             </motion.a>
           </motion.div>
         </div>
@@ -76,6 +80,7 @@ const Hero = () => {
         <button 
           onClick={handleScrollDown}
           className="p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 text-white/50 hover:bg-white/10 hover:text-white transition-colors duration-300"
+          aria-label="Scroll down to learn more"
         >
           <ChevronDown className="h-6 w-6" />
         </button>

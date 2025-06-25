@@ -17,10 +17,10 @@ const About = () => {
             className="order-2 lg:order-1"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight text-gray-900">
-              Who we are
+              Leading Surplus Chemical Brokers Since 2001
             </h2>
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-              TYCHEM LLC is a family-owned business with a mission to provide sustainable solutions for the management of surplus chemicals. We pride ourselves on our commitment to the environment and our drive to reduce waste.
+              TYCHEM LLC is a family-owned business with over 20 years of experience in surplus chemical brokerage. We specialize in providing sustainable solutions for chemical waste management while helping companies turn disposal costs into revenue.
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
@@ -32,7 +32,7 @@ const About = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold mb-1">Trusted Partner</h3>
-                  <p className="text-gray-600">Building long-lasting relationships with customers and suppliers</p>
+                  <p className="text-gray-600">Building long-lasting relationships with customers and suppliers worldwide</p>
                 </div>
               </div>
               
@@ -44,7 +44,7 @@ const About = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold mb-1">Global Expertise</h3>
-                  <p className="text-gray-600">Extensive experience in international business and export</p>
+                  <p className="text-gray-600">Extensive experience in international chemical trading and export</p>
                 </div>
               </div>
             </div>
@@ -52,7 +52,7 @@ const About = () => {
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-xl font-semibold mb-4">Save Money, Save The Earth</h3>
               <p className="text-gray-600">
-                We love what we do as we are providing a winning solution for all involved! Instead of paying costly disposal fees, you could receive payment for your surplus materials. We buy big and small lots and everything is FOB your warehouse.
+                We provide winning solutions for all parties involved. Instead of paying costly disposal fees, you receive payment for your surplus materials. We purchase both large and small quantities with FOB warehouse pickup.
               </p>
             </div>
           </motion.div>
@@ -70,6 +70,7 @@ const About = () => {
                 muted
                 playsInline
                 className="absolute inset-0 w-full h-full object-cover"
+                aria-label="Tychem LLC chemical operations video"
               >
                 <source src="https://video.wixstatic.com/video/3dd1e6_e90011ea92ad4ef2a967dd7d3dd34a05/360p/mp4/file.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
