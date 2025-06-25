@@ -12,9 +12,13 @@ import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import ChemicalTicker from "@/components/ChemicalTicker";
 import SEOProductData from "@/components/SEOProductData";
+import { useSitemapNotification } from "@/hooks/useSitemapNotification";
 
 const Index = () => {
   const location = useLocation();
+
+  // Use the automatic sitemap notification system
+  useSitemapNotification();
 
   useEffect(() => {
     // Set page title and meta description

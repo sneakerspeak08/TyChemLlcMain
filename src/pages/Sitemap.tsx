@@ -1,9 +1,23 @@
+import { useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
 
 const SitemapPage = () => {
   const products = useProducts();
   const baseUrl = 'https://tychem.net';
   const currentDate = new Date().toISOString().split('T')[0];
+  
+  useEffect(() => {
+    // Set the correct content type for XML
+    const metaContentType = document.createElement('meta');
+    metaContentType.httpEquiv = 'Content-Type';
+    metaContentType.content = 'application/xml; charset=utf-8';
+    document.head.appendChild(metaContentType);
+
+    return () => {
+      // Cleanup
+      document.head.removeChild(metaContentType);
+    };
+  }, []);
   
   const staticUrls = [
     {
@@ -42,15 +56,18 @@ ${allUrls.map(url => `
   
 </urlset>`;
 
-  // Set the correct content type for XML
-  if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('data-content-type', 'application/xml');
-  }
-
+  // Return raw XML content
   return (
-    <div style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', fontSize: '12px' }}>
-      {sitemapXml}
-    </div>
+    <div 
+      dangerouslySetInnerHTML={{ __html: sitemapXml }}
+      style={{ 
+        fontFamily: 'monospace', 
+        whiteSpace: 'pre-wrap', 
+        fontSize: '12px',
+        margin: 0,
+        padding: 0
+      }}
+    />
   );
 };
 

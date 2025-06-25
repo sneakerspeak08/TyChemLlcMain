@@ -1,0 +1,2 @@
+# Netlify redirects for automatic sitemap
+/sitemap.xml /sitemap.xml 200

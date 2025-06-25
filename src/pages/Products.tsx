@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { OfferDialog } from "@/components/OfferDialog";
 import { Chemical } from "@/data/products";
 import { useProducts } from "@/hooks/useProducts";
+import { useSitemapNotification } from "@/hooks/useSitemapNotification";
 import SEOProductData from "@/components/SEOProductData";
 
 const ProductsPage = () => {
@@ -18,6 +19,9 @@ const ProductsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
+
+  // Use the automatic sitemap notification system
+  useSitemapNotification();
 
   useEffect(() => {
     window.scrollTo(0, 0);
