@@ -14,7 +14,6 @@ const Footer = () => {
               <span className="text-2xl font-bold text-white tracking-tight">
                 TYCHEM LLC
               </span>
-              <span className="text-xs align-top text-white">®</span>
             </div>
             <p className="text-gray-400 max-w-xs">
               Surplus Chemical Brokers, Since 2001. We buy and sell surplus chemicals to help companies dispose of unwanted inventory responsibly.
