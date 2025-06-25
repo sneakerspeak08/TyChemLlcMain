@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Menu, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface NavLink {
   label: string;
@@ -23,6 +23,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,6 +51,21 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
     setIsMenuOpen(false);
   };
 
+  const handleHomeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === '/') {
+      // If already on home page, scroll to top
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    } else {
+      // If on another page, navigate to home
+      navigate('/');
+    }
+    setIsMenuOpen(false);
+  };
+
   const getHeaderBackground = () => {
     if (!transparent) return "bg-black";
     if (isScrolled) return "bg-black/80 backdrop-blur-md border-b border-gray-200/20";
@@ -65,18 +81,24 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
       >
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center">
+            <button onClick={handleHomeClick} className="flex items-center">
               <span className="text-xl md:text-2xl font-bold text-white tracking-tight">
                 TYCHEM LLC
               </span>
-            </Link>
+            </button>
 
             <nav className="hidden md:flex items-center space-x-8">
               {navLinks.map((link) => (
                 <Link 
                   key={link.href} 
                   to={link.href}
-                  onClick={(e) => handleNavClick(e, link.href)}
+                  onClick={(e) => {
+                    if (link.label === "Home") {
+                      handleHomeClick(e);
+                    } else {
+                      handleNavClick(e, link.href);
+                    }
+                  }}
                   className="text-white/80 hover:text-white transition-colors duration-200"
                 >
                   {link.label}
@@ -118,15 +140,14 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
           >
             <div className="container h-full flex flex-col">
               <div className="flex items-center justify-between py-5">
-                <Link 
-                  to="/"
+                <button 
+                  onClick={handleHomeClick}
                   className="flex items-center"
-                  onClick={() => setIsMenuOpen(false)}
                 >
                   <span className="text-xl font-bold text-white tracking-tight">
                     TYCHEM LLC
                   </span>
-                </Link>
+                </button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -148,7 +169,13 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
                   >
                     <Link
                       to={link.href}
-                      onClick={(e) => handleNavClick(e, link.href)}
+                      onClick={(e) => {
+                        if (link.label === "Home") {
+                          handleHomeClick(e);
+                        } else {
+                          handleNavClick(e, link.href);
+                        }
+                      }}
                       className="text-2xl font-medium text-white"
                     >
                       {link.label}
