@@ -6,31 +6,46 @@ interface FormData {
 
 export const handleFormSubmission = async (formData: FormData, type: 'contact' | 'offer') => {
   try {
-    // Create form data for direct submission
+    // Try Web3Forms first (fastest and most reliable)
+    const success = await submitToWeb3Forms(formData, type);
+    if (success) return true;
+
+    // Fallback to Netlify Forms if Web3Forms fails
+    return await submitToNetlifyForms(formData, type);
+  } catch (error) {
+    console.error('Error sending form:', error);
+    toast.error("Failed to send message. Please try again or contact us directly at ty@tychem.net");
+    return false;
+  }
+};
+
+// Web3Forms - Fast and reliable (recommended)
+const submitToWeb3Forms = async (formData: FormData, type: 'contact' | 'offer') => {
+  try {
     const form = new FormData();
     
-    // Add the recipient email
-    form.append('_to', 'ty@tychem.net');
+    // Web3Forms access key (you'll need to get this from https://web3forms.com)
+    form.append('access_key', 'YOUR_WEB3FORMS_ACCESS_KEY'); // Replace with actual key
     
-    // Add subject based on form type
+    // Add recipient
+    form.append('email', 'ty@tychem.net');
+    
+    // Add subject
     const subject = type === 'contact' 
       ? 'New Contact Form Submission from Tychem Website' 
       : `New Offer for ${formData.productName || 'Product'} from Tychem Website`;
-    form.append('_subject', subject);
+    form.append('subject', subject);
     
     // Add all form fields
     Object.entries(formData).forEach(([key, value]) => {
       form.append(key, value);
     });
 
-    // Add form type for identification
+    // Add form type and timestamp
     form.append('form_type', type);
-    
-    // Add timestamp
     form.append('submitted_at', new Date().toISOString());
 
-    // Submit directly to FormSubmit with AJAX
-    const response = await fetch('https://formsubmit.co/ajax/ty@tychem.net', {
+    const response = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       body: form
     });
@@ -45,11 +60,49 @@ export const handleFormSubmission = async (formData: FormData, type: 'contact' |
       );
       return true;
     } else {
-      throw new Error(result.message || 'Failed to send message');
+      throw new Error(result.message || 'Web3Forms failed');
     }
   } catch (error) {
-    console.error('Error sending form:', error);
-    toast.error("Failed to send message. Please try again or contact us directly at ty@tychem.net");
-    return false;
+    console.error('Web3Forms error:', error);
+    throw error;
+  }
+};
+
+// Netlify Forms - Good fallback option
+const submitToNetlifyForms = async (formData: FormData, type: 'contact' | 'offer') => {
+  try {
+    const form = new FormData();
+    
+    // Netlify form name
+    form.append('form-name', type === 'contact' ? 'contact' : 'offer');
+    
+    // Add all form fields
+    Object.entries(formData).forEach(([key, value]) => {
+      form.append(key, value);
+    });
+
+    // Add form type and timestamp
+    form.append('form_type', type);
+    form.append('submitted_at', new Date().toISOString());
+
+    const response = await fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(form as any).toString()
+    });
+
+    if (response.ok) {
+      toast.success(
+        type === 'contact' 
+          ? "Thank you for your message! We'll get back to you soon."
+          : "Your offer has been sent successfully!"
+      );
+      return true;
+    } else {
+      throw new Error('Netlify Forms failed');
+    }
+  } catch (error) {
+    console.error('Netlify Forms error:', error);
+    throw error;
   }
 };

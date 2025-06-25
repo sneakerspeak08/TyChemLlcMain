@@ -11,6 +11,30 @@
 
   <body>
     <div id="root"></div>
+    
+    <!-- Hidden Netlify Forms for fallback -->
+    <form name="contact" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="company" />
+      <textarea name="message"></textarea>
+      <input type="text" name="form_type" />
+      <input type="text" name="submitted_at" />
+    </form>
+    
+    <form name="offer" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="companyName" />
+      <input type="text" name="contactName" />
+      <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <input type="text" name="offerPrice" />
+      <textarea name="comments"></textarea>
+      <input type="text" name="productName" />
+      <input type="text" name="productCas" />
+      <input type="text" name="form_type" />
+      <input type="text" name="submitted_at" />
+    </form>
+
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
