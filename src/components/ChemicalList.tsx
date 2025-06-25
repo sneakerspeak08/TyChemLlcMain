@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OfferDialog } from "./OfferDialog";
-import { Chemical, chemicals, categories } from "@/data/products";
+import { Chemical, chemicals } from "@/data/products";
 
 const ChemicalList = () => {
   const navigate = useNavigate();
@@ -54,9 +54,6 @@ const ChemicalList = () => {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-tychem-50 text-tychem-700 mb-2">
-                      {chemical.category}
-                    </span>
                     <h3 className="text-xl font-bold">{chemical.name}</h3>
                   </div>
                   <div className="text-right">

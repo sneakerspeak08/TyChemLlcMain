@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { OfferDialog } from "@/components/OfferDialog";
-import { Chemical, chemicals, categories } from "@/data/products";
+import { Chemical, chemicals } from "@/data/products";
 
 const ProductsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
@@ -37,8 +36,7 @@ const ProductsPage = () => {
     const matchesSearch = 
       chemical.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       chemical.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || chemical.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
 
   const handleOpenOfferDialog = (e: React.MouseEvent, chemical: Chemical) => {
@@ -83,26 +81,6 @@ const ProductsPage = () => {
                     />
                   </div>
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={!selectedCategory ? "default" : "outline"}
-                    onClick={() => setSelectedCategory(null)}
-                    className={!selectedCategory ? "bg-tychem-500 hover:bg-tychem-600" : ""}
-                  >
-                    All Categories
-                  </Button>
-                  {categories.map((category) => (
-                    <Button
-                      key={category}
-                      variant={selectedCategory === category ? "default" : "outline"}
-                      onClick={() => setSelectedCategory(category)}
-                      className={selectedCategory === category ? "bg-tychem-500 hover:bg-tychem-600" : ""}
-                    >
-                      {category}
-                    </Button>
-                  ))}
-                </div>
               </div>
             </div>
 
@@ -119,9 +97,6 @@ const ProductsPage = () => {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-tychem-50 text-tychem-700 mb-2">
-                        {chemical.category}
-                      </span>
                       <h3 className="text-xl font-bold">{chemical.name}</h3>
                     </div>
                     <div className="text-right">

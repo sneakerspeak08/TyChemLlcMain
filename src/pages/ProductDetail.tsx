@@ -67,10 +67,7 @@ const ProductDetail = () => {
             <div className="mb-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-tychem-50 text-tychem-700">
-                    {product.category}
-                  </span>
-                  <h1 className="text-3xl font-bold mt-2">{product.name}</h1>
+                  <h1 className="text-3xl font-bold">{product.name}</h1>
                 </div>
                 <div className="text-right">
                   <span className="inline-block px-3 py-1 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">
