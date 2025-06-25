@@ -66,7 +66,7 @@ export function OfferDialog({ isOpen, onClose, productName, productCas }: OfferD
         <DialogHeader>
           <DialogTitle>Send Offer</DialogTitle>
           <DialogDescription>
-            Submit your offer for {productName} (CAS: {productCas})
+            Submit your offer for {productName}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">

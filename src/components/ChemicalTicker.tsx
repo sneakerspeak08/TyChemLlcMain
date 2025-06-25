@@ -27,8 +27,8 @@ const ChemicalTicker = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleChemicalClick = (cas: string) => {
-    navigate(`/products/${cas}`);
+  const handleChemicalClick = (name: string) => {
+    navigate(`/products/${name.toLowerCase().replace(/\s+/g, '-')}`);
   };
 
   return (
@@ -45,24 +45,24 @@ const ChemicalTicker = () => {
               {chemicals.map((chemical, index) => (
                 <button
                   key={`${chemical.id}-${index}`}
-                  onClick={() => handleChemicalClick(chemical.cas)}
+                  onClick={() => handleChemicalClick(chemical.name)}
                   className="inline-flex items-center mx-6 text-white/80 text-xs hover:text-white transition-colors duration-200 cursor-pointer"
                 >
                   <span className="font-medium">{chemical.name}</span>
                   <span className="mx-1.5">•</span>
-                  <span className="opacity-80">CAS: {chemical.cas}</span>
+                  <span className="opacity-80">{chemical.quantity}</span>
                 </button>
               ))}
               {/* Duplicate for seamless loop */}
               {chemicals.map((chemical, index) => (
                 <button
                   key={`${chemical.id}-${index}-duplicate`}
-                  onClick={() => handleChemicalClick(chemical.cas)}
+                  onClick={() => handleChemicalClick(chemical.name)}
                   className="inline-flex items-center mx-6 text-white/80 text-xs hover:text-white transition-colors duration-200 cursor-pointer"
                 >
                   <span className="font-medium">{chemical.name}</span>
                   <span className="mx-1.5">•</span>
-                  <span className="opacity-80">CAS: {chemical.cas}</span>
+                  <span className="opacity-80">{chemical.quantity}</span>
                 </button>
               ))}
             </div>

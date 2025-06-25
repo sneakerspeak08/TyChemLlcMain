@@ -6,13 +6,12 @@ import { ChevronLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { chemicals } from "@/data/products";
-import ProductSchema from "@/components/ProductSchema";
 import { OfferDialog } from "@/components/OfferDialog";
 
 const ProductDetail = () => {
   const { cas } = useParams();
   const navigate = useNavigate();
-  const product = chemicals.find(c => c.cas === cas);
+  const product = chemicals.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === cas);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -39,14 +38,13 @@ const ProductDetail = () => {
       document.head.appendChild(metaDescription);
     }
     metaDescription.setAttribute('content', 
-      `${product.name} (CAS: ${product.cas}) - ${product.description} Available at Tychem LLC.`
+      `${product.name} - ${product.description} Available at Tychem LLC.`
     );
   }, [product]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar transparent={false} />
-      <ProductSchema product={product} />
       
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 md:px-6">
@@ -73,7 +71,6 @@ const ProductDetail = () => {
                     {product.category}
                   </span>
                   <h1 className="text-3xl font-bold mt-2">{product.name}</h1>
-                  <p className="text-gray-600 mt-1">CAS: {product.cas}</p>
                 </div>
                 <div className="text-right">
                   <span className="inline-block px-3 py-1 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">
@@ -85,43 +82,6 @@ const ProductDetail = () => {
 
             <div className="prose max-w-none">
               <p className="text-lg text-gray-700">{product.description}</p>
-
-              <div className="flex items-center text-gray-600 mt-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="text-sm">{product.location}</span>
-              </div>
-
-              {product.applications && (
-                <div className="mt-8">
-                  <h2 className="text-xl font-semibold mb-4">Applications</h2>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {product.applications.map((app, index) => (
-                      <li key={index}>{app}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {product.safetyInfo && (
-                <div className="mt-8">
-                  <h2 className="text-xl font-semibold mb-4">Safety Information</h2>
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <p><strong>Hazard Class:</strong> {product.safetyInfo.hazardClass}</p>
-                    <p><strong>Storage Temperature:</strong> {product.safetyInfo.storageTemp}</p>
-                    <div className="mt-4">
-                      <strong>Handling Instructions:</strong>
-                      <ul className="list-disc pl-5 mt-2">
-                        {product.safetyInfo.handling?.map((instruction, index) => (
-                          <li key={index}>{instruction}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="mt-12 flex justify-center">
                 <Button
@@ -143,7 +103,7 @@ const ProductDetail = () => {
         isOpen={isOfferDialogOpen}
         onClose={() => setIsOfferDialogOpen(false)}
         productName={product.name}
-        productCas={product.cas}
+        productCas=""
       />
     </div>
   );

@@ -22,7 +22,7 @@ const ChemicalList = () => {
   };
 
   const handleCardClick = (chemical: Chemical) => {
-    navigate(`/products/${chemical.cas}`);
+    navigate(`/products/${chemical.name.toLowerCase().replace(/\s+/g, '-')}`);
   };
 
   return (
@@ -58,7 +58,6 @@ const ChemicalList = () => {
                       {chemical.category}
                     </span>
                     <h3 className="text-xl font-bold">{chemical.name}</h3>
-                    <p className="text-sm text-gray-500">CAS: {chemical.cas}</p>
                   </div>
                   <div className="text-right">
                     <span className="inline-block px-3 py-1 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">
@@ -69,14 +68,7 @@ const ChemicalList = () => {
                 
                 <p className="text-gray-600 mb-4">{chemical.description}</p>
                 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex items-center text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-sm">{chemical.location}</span>
-                  </div>
+                <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-100">
                   <Button 
                     variant="outline" 
                     className="text-tychem-600 hover:text-tychem-700"
@@ -107,7 +99,7 @@ const ChemicalList = () => {
           isOpen={isOfferDialogOpen}
           onClose={() => setIsOfferDialogOpen(false)}
           productName={selectedChemical.name}
-          productCas={selectedChemical.cas}
+          productCas=""
         />
       )}
     </>
