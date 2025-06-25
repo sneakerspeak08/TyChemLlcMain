@@ -18,7 +18,84 @@
     <priority>0.9</priority>
   </url>
   
-  <!-- Note: This static sitemap will be replaced by the dynamic version from admin panel -->
-  <!-- Use the admin panel to download the current sitemap with your actual inventory -->
+  <!-- Product: Sodium Hydroxide -->
+  <url>
+    <loc>https://tychem.net/products/sodium-hydroxide</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Citric Acid -->
+  <url>
+    <loc>https://tychem.net/products/citric-acid</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Glycerin -->
+  <url>
+    <loc>https://tychem.net/products/glycerin</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Potassium Chloride -->
+  <url>
+    <loc>https://tychem.net/products/potassium-chloride</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Methanol -->
+  <url>
+    <loc>https://tychem.net/products/methanol</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Sulfuric Acid -->
+  <url>
+    <loc>https://tychem.net/products/sulfuric-acid</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Ethylene Glycol -->
+  <url>
+    <loc>https://tychem.net/products/ethylene-glycol</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Sodium Carbonate -->
+  <url>
+    <loc>https://tychem.net/products/sodium-carbonate</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Acetic Acid -->
+  <url>
+    <loc>https://tychem.net/products/acetic-acid</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Product: Hydrogen Peroxide -->
+  <url>
+    <loc>https://tychem.net/products/hydrogen-peroxide</loc>
+    <lastmod>2025-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
   
 </urlset>

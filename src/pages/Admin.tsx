@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Edit, Trash2, Save, X, Lock, Globe, AlertCircle, CheckCircle, ExternalLink, Zap, Copy, Download, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Lock, Globe, AlertCircle, CheckCircle, ExternalLink, Download, Copy, Upload, FileText, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Chemical } from "@/data/products";
-import { useSitemapNotification } from "@/hooks/useSitemapNotification";
+import { downloadSitemap, autoSaveSitemap, copySitemapToClipboard } from "@/utils/sitemapGenerator";
+import { useSitemapFileUpdater } from "@/hooks/useSitemapFileUpdater";
 
 const ADMIN_PASSWORD = "tychem2025"; // Change this to your desired password
 
@@ -101,8 +102,8 @@ const AdminPage = () => {
     quantity: ""
   });
 
-  // Use the automatic sitemap notification hook
-  useSitemapNotification();
+  // Use the automatic sitemap file updater
+  useSitemapFileUpdater();
 
   // Check if user is already authenticated (session storage)
   useEffect(() => {
@@ -114,29 +115,30 @@ const AdminPage = () => {
 
   // Listen for sitemap updates
   useEffect(() => {
-    const handleSitemapUpdate = (event: any) => {
+    const handleSitemapReady = (event: any) => {
       setSitemapStatus({
         lastUpdated: event.detail.timestamp,
-        productCount: event.detail.productCount
+        productCount: event.detail.productCount,
+        downloadUrl: event.detail.downloadUrl,
+        content: event.detail.content
       });
     };
 
-    window.addEventListener('sitemapUpdated', handleSitemapUpdate);
+    window.addEventListener('sitemapReady', handleSitemapReady);
     
     // Load existing sitemap status
-    const savedStatus = localStorage.getItem('tychem-sitemap-status');
+    const savedStatus = localStorage.getItem('tychem-sitemap-updated');
     if (savedStatus) {
-      try {
-        setSitemapStatus(JSON.parse(savedStatus));
-      } catch (error) {
-        // Ignore parsing errors
-      }
+      setSitemapStatus({
+        lastUpdated: new Date(savedStatus),
+        productCount: products.length
+      });
     }
 
     return () => {
-      window.removeEventListener('sitemapUpdated', handleSitemapUpdate);
+      window.removeEventListener('sitemapReady', handleSitemapReady);
     };
-  }, []);
+  }, [products.length]);
 
   // Load products from localStorage on component mount
   useEffect(() => {
@@ -205,7 +207,7 @@ const AdminPage = () => {
   const handleDeleteProduct = (id: number) => {
     if (confirm('Are you sure you want to delete this product?')) {
       setProducts(prev => prev.filter(p => p.id !== id));
-      toast.success('Product deleted - Sitemap updated automatically! 🚀');
+      toast.success('Product deleted - Download updated sitemap below! 📥');
     }
   };
 
@@ -224,18 +226,33 @@ const AdminPage = () => {
         quantity: formData.quantity.trim()
       };
       setProducts(prev => [...prev, newProduct]);
-      toast.success('Product added - Sitemap updated automatically! 🚀');
+      toast.success('Product added - Download updated sitemap below! 📥');
     } else if (editingProduct) {
       setProducts(prev => prev.map(p => 
         p.id === editingProduct.id 
           ? { ...p, name: formData.name.trim(), description: formData.description.trim(), quantity: formData.quantity.trim() }
           : p
       ));
-      toast.success('Product updated - Sitemap updated automatically! 🚀');
+      toast.success('Product updated - Download updated sitemap below! 📥');
     }
 
     setIsEditDialogOpen(false);
     setFormData({ name: "", description: "", quantity: "" });
+  };
+
+  const handleDownloadSitemap = () => {
+    downloadSitemap(products);
+    toast.success('Sitemap downloaded! Replace your public/sitemap.xml file with this one.');
+  };
+
+  const handleAutoDownloadSitemap = () => {
+    autoSaveSitemap(products);
+    toast.success('Sitemap auto-downloaded! Replace your public/sitemap.xml file.');
+  };
+
+  const handleCopySitemap = async () => {
+    await copySitemapToClipboard(products);
+    toast.success('Sitemap XML copied to clipboard!');
   };
 
   const handleExportData = () => {
@@ -260,7 +277,7 @@ const AdminPage = () => {
         const importedProducts = JSON.parse(e.target?.result as string);
         if (Array.isArray(importedProducts)) {
           setProducts(importedProducts);
-          toast.success('Products imported - Sitemap updated automatically! 🚀');
+          toast.success('Products imported - Download updated sitemap below! 📥');
         } else {
           toast.error('Invalid file format');
         }
@@ -269,40 +286,6 @@ const AdminPage = () => {
       }
     };
     reader.readAsText(file);
-  };
-
-  const handleViewSitemap = () => {
-    window.open('/sitemap.xml', '_blank');
-  };
-
-  const handleCopySearchConsoleInstructions = () => {
-    const instructions = `🎯 MODERN SEO SETUP INSTRUCTIONS
-
-Your sitemap is now 100% automatic! Here's how to get maximum SEO benefit:
-
-📍 **Your Live Sitemap URL:**
-https://tychem.net/sitemap.xml
-
-🚀 **Google Search Console Setup:**
-1. Go to: https://search.google.com/search-console
-2. Add your property: https://tychem.net
-3. Go to "Sitemaps" in the left menu
-4. Submit your sitemap URL: https://tychem.net/sitemap.xml
-5. Google will automatically check it regularly!
-
-✅ **What's Already Automatic:**
-- Sitemap updates when you change products
-- All ${products.length} products are included
-- URLs are SEO-optimized
-- Last modified dates are current
-- No manual work needed!
-
-🎉 **Result:** Google will discover your new products faster and index them automatically!
-
-Note: Google deprecated the ping service in 2023, so manual submission to Search Console is now the recommended method.`;
-
-    navigator.clipboard.writeText(instructions);
-    toast.success('Instructions copied to clipboard!');
   };
 
   // Show login form if not authenticated
@@ -316,7 +299,7 @@ Note: Google deprecated the ping service in 2023, so manual submission to Search
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">Manage your chemical inventory - Everything updates automatically!</p>
+            <p className="text-gray-600 mt-1">Manage your chemical inventory and download updated sitemaps</p>
           </div>
           <div className="flex gap-4">
             <Button onClick={handleLogout} variant="outline" className="text-red-600 hover:text-red-700">
@@ -337,7 +320,7 @@ Note: Google deprecated the ping service in 2023, so manual submission to Search
         <Tabs defaultValue="products" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="products">Product Management</TabsTrigger>
-            <TabsTrigger value="seo">SEO & Sitemap</TabsTrigger>
+            <TabsTrigger value="sitemap">Sitemap Management</TabsTrigger>
           </TabsList>
 
           <TabsContent value="products" className="space-y-6">
@@ -366,10 +349,10 @@ Note: Google deprecated the ping service in 2023, so manual submission to Search
             </div>
 
             <Alert>
-              <Zap className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
               <AlertDescription>
-                <strong>⚡ 100% Automatic:</strong> Your sitemap updates instantly when you add, edit, or delete products. 
-                Submit to Google Search Console once for automatic discovery of all future changes!
+                <strong>📥 Simple Process:</strong> When you add, edit, or delete products, download the updated sitemap below and replace your public/sitemap.xml file. 
+                Then submit to Google Search Console for faster indexing!
               </AlertDescription>
             </Alert>
 
@@ -428,12 +411,12 @@ Note: Google deprecated the ping service in 2023, so manual submission to Search
             )}
           </TabsContent>
 
-          <TabsContent value="seo" className="space-y-6">
+          <TabsContent value="sitemap" className="space-y-6">
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>🎉 PERFECT! Your SEO is now fully automatic!</strong> The sitemap updates in real-time. 
-                Just submit to Google Search Console once and you're done forever!
+                <strong>🎯 SIMPLE & EFFECTIVE!</strong> Your sitemap is generated with all {products.length} products. 
+                Download it and replace your public/sitemap.xml file for instant SEO updates!
               </AlertDescription>
             </Alert>
 
@@ -441,114 +424,103 @@ Note: Google deprecated the ping service in 2023, so manual submission to Search
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Zap className="h-5 w-5 mr-2 text-green-600" />
-                    Modern Automatic SEO System
+                    <Download className="h-5 w-5 mr-2 text-blue-600" />
+                    Download Updated Sitemap
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <div className="flex items-center mb-2">
-                      <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                      <h4 className="font-medium text-green-800">Zero Manual Work Required!</h4>
+                      <FileText className="h-5 w-5 text-blue-600 mr-2" />
+                      <h4 className="font-medium text-blue-800">Ready to Download!</h4>
                     </div>
-                    <p className="text-sm text-green-700">
-                      Your sitemap automatically includes all {products.length} products and updates instantly. 
-                      Submit to Google Search Console once and Google will check for updates automatically.
+                    <p className="text-sm text-blue-700 mb-4">
+                      Your sitemap includes all {products.length} products with current URLs and dates. 
+                      Download and replace your public/sitemap.xml file.
                     </p>
+                    
+                    <div className="flex gap-3">
+                      <Button onClick={handleDownloadSitemap} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                        <Download className="h-4 w-4 mr-2" />
+                        Download sitemap.xml
+                      </Button>
+                      <Button onClick={handleCopySitemap} variant="outline" className="flex-1">
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy XML
+                      </Button>
+                    </div>
                   </div>
                   
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">What happens automatically:</h4>
-                    <ul className="text-sm text-blue-700 space-y-1">
-                      <li>✅ Sitemap updates when you change products</li>
-                      <li>✅ Google checks your sitemap regularly</li>
-                      <li>✅ Product URLs are generated</li>
-                      <li>✅ SEO data updates in real-time</li>
-                      <li>✅ Search engines discover new products faster</li>
-                    </ul>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button onClick={handleViewSitemap} className="flex-1 bg-tychem-500 hover:bg-tychem-600">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View Live Sitemap
-                    </Button>
-                    <Button onClick={handleCopySearchConsoleInstructions} variant="outline" className="flex-1">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy Setup Guide
-                    </Button>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2 text-green-800">📋 Simple Steps:</h4>
+                    <ol className="text-sm text-green-700 space-y-1">
+                      <li>1. Click "Download sitemap.xml" above</li>
+                      <li>2. Replace your public/sitemap.xml file</li>
+                      <li>3. Submit to Google Search Console</li>
+                      <li>4. Done! Google will index your updates</li>
+                    </ol>
                   </div>
 
                   <div className="text-xs text-gray-500 bg-yellow-50 p-3 rounded">
-                    <strong>🎯 Modern SEO (2025):</strong> 
-                    <br />• Google deprecated ping service in 2023
-                    <br />• Submit sitemap to Search Console once
-                    <br />• Google automatically checks for updates
-                    <br />• Your sitemap is always current and live!
+                    <strong>💡 Pro Tip:</strong> 
+                    <br />• Download after any product changes
+                    <br />• Replace the file in your website's public folder
+                    <br />• Submit to Google Search Console for faster indexing
+                    <br />• Your sitemap URL: https://tychem.net/sitemap.xml
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Automatic SEO Status</CardTitle>
+                  <CardTitle>Current Sitemap Status</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Dynamic Sitemap</span>
-                      <span className="text-green-600 text-sm font-medium">⚡ Live & Automatic</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Google Discovery</span>
-                      <span className="text-green-600 text-sm font-medium">⚡ Search Console</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Product URLs</span>
-                      <span className="text-green-600 text-sm">⚡ Auto-Generated</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Meta Tags</span>
-                      <span className="text-green-600 text-sm">⚡ Auto-Updated</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Structured Data</span>
-                      <span className="text-green-600 text-sm">⚡ Real-Time</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Manual Work Required</span>
-                      <span className="text-green-600 text-sm font-medium">🎉 ZERO!</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Current Products</span>
+                      <span className="text-sm">Products Included</span>
                       <span className="text-blue-600 text-sm font-medium">{products.length} items</span>
                     </div>
-                    {sitemapStatus && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Last Updated</span>
-                        <span className="text-green-600 text-sm font-medium">
-                          {new Date(sitemapStatus.lastUpdated).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Sitemap Format</span>
+                      <span className="text-green-600 text-sm font-medium">✅ XML Standard</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">URLs Generated</span>
+                      <span className="text-green-600 text-sm">{products.length + 2} total</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">SEO Optimized</span>
+                      <span className="text-green-600 text-sm">✅ Ready</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Last Generated</span>
+                      <span className="text-green-600 text-sm font-medium">
+                        {sitemapStatus ? new Date(sitemapStatus.lastUpdated).toLocaleString() : 'Ready'}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-green-800 mb-2">SEO Score: Perfect ⭐⭐⭐⭐⭐</h4>
-                    <p className="text-sm text-green-700">
-                      Your site has the most advanced automatic SEO system possible. 
-                      Everything updates in real-time with zero manual work!
-                    </p>
+                    <h4 className="font-medium text-green-800 mb-2">Sitemap Includes:</h4>
+                    <ul className="text-sm text-green-700 space-y-1">
+                      <li>✅ Homepage (priority 1.0)</li>
+                      <li>✅ Products page (priority 0.9)</li>
+                      <li>✅ All {products.length} product pages (priority 0.8)</li>
+                      <li>✅ Current dates and change frequencies</li>
+                      <li>✅ SEO-optimized URLs</li>
+                    </ul>
                   </div>
 
                   <div className="text-xs text-gray-500">
-                    <strong>What you never have to do again:</strong>
-                    <ul className="mt-1 space-y-1">
-                      <li>❌ Download sitemap files</li>
-                      <li>❌ Upload sitemap files</li>
-                      <li>❌ Manually ping search engines</li>
-                      <li>❌ Update SEO data</li>
-                      <li>✅ Just manage your products - everything else is automatic!</li>
+                    <strong>URLs in your sitemap:</strong>
+                    <ul className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                      <li>• https://tychem.net/</li>
+                      <li>• https://tychem.net/products</li>
+                      {products.slice(0, 5).map(product => (
+                        <li key={product.id}>• https://tychem.net/products/{product.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}</li>
+                      ))}
+                      {products.length > 5 && <li>• ... and {products.length - 5} more product pages</li>}
                     </ul>
                   </div>
                 </CardContent>
@@ -557,41 +529,37 @@ Note: Google deprecated the ping service in 2023, so manual submission to Search
 
             <Card>
               <CardHeader>
-                <CardTitle>Live Automatic Sitemap</CardTitle>
+                <CardTitle>Google Search Console Setup</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-4">
                     <code className="text-sm text-gray-700">https://tychem.net/sitemap.xml</code>
-                    <Button onClick={handleViewSitemap} size="sm" variant="outline">
+                    <Button 
+                      onClick={() => window.open('https://search.google.com/search-console', '_blank')} 
+                      size="sm" 
+                      variant="outline"
+                    >
                       <ExternalLink className="h-4 w-4 mr-2" />
-                      View Live
+                      Open Search Console
                     </Button>
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  ⚡ This URL automatically shows your current {products.length} products in real-time. 
-                  Submit this URL to Google Search Console once and Google will check it regularly for updates.
-                  <strong> No manual updates ever needed!</strong>
+                  📍 After downloading and replacing your sitemap.xml file, submit this URL to Google Search Console. 
+                  Google will then automatically check for updates when you make changes.
                 </p>
                 
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <h4 className="text-sm font-medium text-blue-800 mb-2">📋 Quick Setup:</h4>
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">🚀 Quick Setup:</h4>
                   <ol className="text-xs text-blue-700 space-y-1">
-                    <li>1. Go to Google Search Console</li>
-                    <li>2. Add your website property</li>
-                    <li>3. Submit sitemap: https://tychem.net/sitemap.xml</li>
-                    <li>4. Done! Google will check for updates automatically</li>
+                    <li>1. Download your sitemap using the button above</li>
+                    <li>2. Replace your website's public/sitemap.xml file</li>
+                    <li>3. Go to Google Search Console</li>
+                    <li>4. Add your website property</li>
+                    <li>5. Submit sitemap: https://tychem.net/sitemap.xml</li>
+                    <li>6. Google will check for updates automatically!</li>
                   </ol>
-                  <Button 
-                    onClick={handleCopySearchConsoleInstructions} 
-                    size="sm" 
-                    variant="outline" 
-                    className="mt-2"
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Full Instructions
-                  </Button>
                 </div>
               </CardContent>
             </Card>
