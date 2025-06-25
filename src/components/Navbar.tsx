@@ -70,7 +70,6 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
               <span className="text-xl md:text-2xl font-bold text-white tracking-tight">
                 TYCHEM LLC
               </span>
-              <span className="text-xs align-top text-white">®</span>
             </Link>
 
             <nav className="hidden md:flex items-center space-x-8">
@@ -128,7 +127,6 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
                   <span className="text-xl font-bold text-white tracking-tight">
                     TYCHEM LLC
                   </span>
-                  <span className="text-xs align-top text-white">®</span>
                 </Link>
                 <Button
                   variant="ghost"
