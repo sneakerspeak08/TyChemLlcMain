@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { chemicals } from "@/data/products";
 import { OfferDialog } from "@/components/OfferDialog";
+import { useProducts } from "@/hooks/useProducts";
 
 const ProductDetail = () => {
   const { cas } = useParams();
   const navigate = useNavigate();
-  const product = chemicals.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === cas);
+  const products = useProducts();
+  const product = products.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === cas);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -19,10 +20,10 @@ const ProductDetail = () => {
   }, []);
 
   useEffect(() => {
-    if (!product) {
+    if (products.length > 0 && !product) {
       navigate("/products");
     }
-  }, [product, navigate]);
+  }, [product, navigate, products]);
 
   if (!product) return null;
 

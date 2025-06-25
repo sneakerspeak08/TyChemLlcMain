@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { OfferDialog } from "@/components/OfferDialog";
-import { Chemical, chemicals } from "@/data/products";
+import { Chemical } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 
 const ProductsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const products = useProducts(); // Use the hook to get products
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
@@ -23,16 +25,16 @@ const ProductsPage = () => {
   useEffect(() => {
     const selectedChemicalId = location.state?.selectedChemicalId;
     if (selectedChemicalId) {
-      const chemical = chemicals.find(c => c.id === selectedChemicalId);
+      const chemical = products.find(c => c.id === selectedChemicalId);
       if (chemical) {
         setSelectedChemical(chemical);
         setIsOfferDialogOpen(true);
         window.history.replaceState({}, document.title);
       }
     }
-  }, [location.state]);
+  }, [location.state, products]);
 
-  const filteredChemicals = chemicals.filter(chemical => {
+  const filteredChemicals = products.filter(chemical => {
     const matchesSearch = 
       chemical.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       chemical.description.toLowerCase().includes(searchTerm.toLowerCase());

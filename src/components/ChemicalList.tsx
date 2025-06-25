@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OfferDialog } from "./OfferDialog";
-import { Chemical, chemicals } from "@/data/products";
+import { Chemical } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 
 const ChemicalList = () => {
   const navigate = useNavigate();
+  const products = useProducts();
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
   // Get only the last 2 chemicals
-  const latestChemicals = chemicals.slice(-2);
+  const latestChemicals = products.slice(-2);
 
   const handleOpenOfferDialog = (e: React.MouseEvent, chemical: Chemical) => {
     e.stopPropagation();

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { chemicals } from '@/data/products';
+import { useProducts } from '@/hooks/useProducts';
 
 const ChemicalTicker = () => {
   const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
+  const products = useProducts();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,7 +43,7 @@ const ChemicalTicker = () => {
         >
           <div className="relative overflow-hidden">
             <div className="flex animate-[ticker_60s_linear_infinite] whitespace-nowrap">
-              {chemicals.map((chemical, index) => (
+              {products.map((chemical, index) => (
                 <button
                   key={`${chemical.id}-${index}`}
                   onClick={() => handleChemicalClick(chemical.name)}
@@ -54,7 +55,7 @@ const ChemicalTicker = () => {
                 </button>
               ))}
               {/* Duplicate for seamless loop */}
-              {chemicals.map((chemical, index) => (
+              {products.map((chemical, index) => (
                 <button
                   key={`${chemical.id}-${index}-duplicate`}
                   onClick={() => handleChemicalClick(chemical.name)}
