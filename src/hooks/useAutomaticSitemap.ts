@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useProducts } from './useProducts';
-import { generateSitemap } from '@/utils/sitemapGenerator';
+import { toast } from 'sonner';
 
 export const useAutomaticSitemap = () => {
   const products = useProducts();
@@ -8,47 +8,61 @@ export const useAutomaticSitemap = () => {
   useEffect(() => {
     if (products.length > 0) {
       // Automatically update sitemap whenever products change
-      updateSitemapFile(products);
+      updateSitemapAutomatically(products);
     }
   }, [products]);
 
-  const updateSitemapFile = async (products: any[]) => {
+  const updateSitemapAutomatically = async (products: any[]) => {
     try {
-      const sitemapContent = generateSitemap(products);
+      console.log('🔄 Updating sitemap automatically...');
       
-      // Method 1: Use Netlify Functions to update the file
-      await fetch('/.netlify/functions/update-sitemap', {
+      // Call Netlify function to generate new sitemap
+      const response = await fetch('/.netlify/functions/update-sitemap', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          sitemap: sitemapContent,
-          timestamp: new Date().toISOString()
-        })
+        body: JSON.stringify({ products })
       });
 
-      console.log('✅ Sitemap automatically updated!');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       
-      // Notify Google Search Console automatically
-      await notifySearchEngines();
+      if (result.success) {
+        console.log('✅ Sitemap updated automatically!');
+        
+        // Store the new sitemap content locally for admin panel
+        localStorage.setItem('tychem-sitemap-content', result.sitemap);
+        localStorage.setItem('tychem-sitemap-updated', result.timestamp);
+        
+        // Dispatch event for admin panel
+        const event = new CustomEvent('sitemapUpdated', {
+          detail: {
+            timestamp: result.timestamp,
+            productCount: result.productCount,
+            sitemap: result.sitemap
+          }
+        });
+        window.dispatchEvent(event);
+        
+        // Show success message only in admin context
+        if (window.location.pathname === '/admin') {
+          toast.success('🚀 Sitemap updated automatically!');
+        }
+      }
       
     } catch (error) {
-      console.error('Failed to update sitemap:', error);
+      console.error('Automatic sitemap update failed:', error);
+      
+      // Only show error in admin context
+      if (window.location.pathname === '/admin') {
+        toast.error('Automatic sitemap update failed - download manually');
+      }
     }
   };
 
-  const notifySearchEngines = async () => {
-    try {
-      // Ping Google to reindex the sitemap
-      await fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent('https://tychem.net/sitemap.xml')}`);
-      
-      // Ping Bing
-      await fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent('https://tychem.net/sitemap.xml')}`);
-      
-      console.log('🔔 Search engines notified of sitemap update');
-    } catch (error) {
-      console.log('Search engine notification failed (this is normal)');
-    }
-  };
+  return { products };
 };

@@ -1,8 +1,11 @@
-// Comprehensive automatic sitemap updater
+import { generateSitemap } from './sitemapGenerator';
+
 export class AutomaticSitemapUpdater {
   private static instance: AutomaticSitemapUpdater;
   private updateQueue: any[] = [];
   private isUpdating = false;
+  private lastUpdate = 0;
+  private readonly UPDATE_THROTTLE = 5000; // 5 seconds
 
   static getInstance() {
     if (!this.instance) {
@@ -12,7 +15,14 @@ export class AutomaticSitemapUpdater {
   }
 
   async updateSitemap(products: any[]) {
-    // Add to queue to prevent multiple simultaneous updates
+    // Throttle updates to prevent spam
+    const now = Date.now();
+    if (now - this.lastUpdate < this.UPDATE_THROTTLE) {
+      console.log('Sitemap update throttled');
+      return;
+    }
+
+    this.lastUpdate = now;
     this.updateQueue.push(products);
     
     if (!this.isUpdating) {
@@ -41,7 +51,7 @@ export class AutomaticSitemapUpdater {
     const methods = [
       () => this.updateViaNetlifyFunction(products),
       () => this.updateViaWebhook(products),
-      () => this.updateViaAPI(products)
+      () => this.updateViaLocalStorage(products)
     ];
 
     // Try each method until one succeeds
@@ -56,40 +66,75 @@ export class AutomaticSitemapUpdater {
       }
     }
     
-    throw new Error('All update methods failed');
+    console.log('All update methods failed, using local storage fallback');
+    this.updateViaLocalStorage(products);
   }
 
   private async updateViaNetlifyFunction(products: any[]) {
-    const sitemap = this.generateSitemap(products);
-    
     const response = await fetch('/.netlify/functions/update-sitemap', {
       method: 'POST',
-      body: JSON.stringify({ sitemap, products: products.length })
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ products })
     });
     
-    if (!response.ok) throw new Error('Netlify function failed');
+    if (!response.ok) {
+      throw new Error('Netlify function failed');
+    }
+
+    const result = await response.json();
+    
+    // Store result locally
+    localStorage.setItem('tychem-sitemap-content', result.sitemap);
+    localStorage.setItem('tychem-sitemap-updated', result.timestamp);
+    
+    return result;
   }
 
   private async updateViaWebhook(products: any[]) {
-    // Use a webhook service like Zapier or Make.com
-    await fetch('YOUR_WEBHOOK_URL', {
+    // Use a webhook service like Zapier, Make.com, or IFTTT
+    const webhookUrl = process.env.SITEMAP_WEBHOOK_URL;
+    
+    if (!webhookUrl) {
+      throw new Error('No webhook URL configured');
+    }
+
+    const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'update_sitemap',
-        sitemap: this.generateSitemap(products),
-        timestamp: new Date().toISOString()
+        products: products,
+        sitemap: generateSitemap(products),
+        timestamp: new Date().toISOString(),
+        site: 'tychem.net'
       })
     });
+
+    if (!response.ok) {
+      throw new Error('Webhook failed');
+    }
   }
 
-  private async updateViaAPI(products: any[]) {
-    // Use your hosting provider's API
-    const sitemap = this.generateSitemap(products);
+  private updateViaLocalStorage(products: any[]) {
+    // Fallback: Store in localStorage for manual download
+    const sitemap = generateSitemap(products);
+    const timestamp = new Date().toISOString();
     
-    // Example for different providers:
-    // Vercel, Netlify, GitHub Pages, etc.
-    await this.uploadToProvider(sitemap);
+    localStorage.setItem('tychem-sitemap-content', sitemap);
+    localStorage.setItem('tychem-sitemap-updated', timestamp);
+    
+    // Dispatch event for admin panel
+    const event = new CustomEvent('sitemapReady', {
+      detail: {
+        timestamp,
+        productCount: products.length,
+        content: sitemap,
+        downloadUrl: '/sitemap.xml'
+      }
+    });
+    window.dispatchEvent(event);
   }
 
   private async notifySearchEngines() {
@@ -102,56 +147,29 @@ export class AutomaticSitemapUpdater {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           host: 'tychem.net',
-          key: 'YOUR_INDEXNOW_KEY',
+          key: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6', // Replace with your IndexNow key
           urlList: [sitemapUrl]
         })
       });
+      console.log('🔔 Search engines notified via IndexNow');
     } catch (error) {
       console.log('IndexNow notification failed');
     }
 
-    // Fallback: Direct notification (deprecated but still works)
+    // Fallback: Traditional ping (deprecated but still works)
     try {
       await fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`);
+      console.log('🔔 Google pinged directly');
     } catch (error) {
       console.log('Google ping failed');
     }
   }
-
-  private generateSitemap(products: any[]): string {
-    // Your existing sitemap generation logic
-    const baseUrl = 'https://tychem.net';
-    const currentDate = new Date().toISOString().split('T')[0];
-    
-    const urls = [
-      { loc: `${baseUrl}/`, priority: '1.0' },
-      { loc: `${baseUrl}/products`, priority: '0.9' },
-      ...products.map(p => ({
-        loc: `${baseUrl}/products/${p.name.toLowerCase().replace(/\s+/g, '-')}`,
-        priority: '0.8'
-      }))
-    ];
-
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map(url => `  <url>
-    <loc>${url.loc}</loc>
-    <lastmod>${currentDate}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>${url.priority}</priority>
-  </url>`).join('\n')}
-</urlset>`;
-  }
-
-  private async uploadToProvider(sitemap: string) {
-    // Implementation depends on your hosting provider
-    // This is where you'd integrate with their API
-    throw new Error('Provider upload not implemented');
-  }
 }
 
-// Usage in your components
+// Hook for easy usage
 export const useAutomaticSitemapUpdates = () => {
   const updater = AutomaticSitemapUpdater.getInstance();
-  return updater;
+  return {
+    updateSitemap: (products: any[]) => updater.updateSitemap(products)
+  };
 };
