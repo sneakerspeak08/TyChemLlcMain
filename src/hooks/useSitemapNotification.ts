@@ -3,7 +3,7 @@ import { useProducts } from './useProducts';
 
 // Simple hook that just tracks when products change
 export const useSitemapNotification = () => {
-  const products = useProducts();
+  const { products } = useProducts();
 
   useEffect(() => {
     // Just log that products changed - the admin panel handles sitemap generation

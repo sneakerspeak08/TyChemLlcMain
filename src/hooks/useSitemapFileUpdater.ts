@@ -3,7 +3,7 @@ import { useProducts } from './useProducts';
 import { AutomaticSitemapUpdater } from '@/utils/automaticSitemapUpdater';
 
 export const useSitemapFileUpdater = () => {
-  const products = useProducts();
+  const { products } = useProducts();
 
   useEffect(() => {
     if (products.length > 0) {

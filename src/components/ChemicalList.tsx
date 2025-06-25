@@ -8,7 +8,7 @@ import { useProducts } from "@/hooks/useProducts";
 
 const ChemicalList = () => {
   const navigate = useNavigate();
-  const products = useProducts();
+  const { products } = useProducts();
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 

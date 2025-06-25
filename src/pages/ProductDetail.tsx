@@ -11,7 +11,7 @@ import { useProducts } from "@/hooks/useProducts";
 const ProductDetail = () => {
   const { cas } = useParams();
   const navigate = useNavigate();
-  const products = useProducts();
+  const { products } = useProducts();
   const product = products.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === cas);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 

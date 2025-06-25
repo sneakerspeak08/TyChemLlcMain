@@ -3,7 +3,7 @@ import { useProducts } from './useProducts';
 import { toast } from 'sonner';
 
 export const useAutomaticSitemap = () => {
-  const products = useProducts();
+  const { products } = useProducts();
 
   useEffect(() => {
     if (products.length > 0) {

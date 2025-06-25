@@ -15,7 +15,7 @@ import SEOProductData from "@/components/SEOProductData";
 const ProductsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const products = useProducts();
+  const { products } = useProducts();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);

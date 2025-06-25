@@ -6,7 +6,7 @@ import { useProducts } from '@/hooks/useProducts';
 const ChemicalTicker = () => {
   const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
-  const products = useProducts();
+  const { products } = useProducts();
 
   useEffect(() => {
     const handleScroll = () => {

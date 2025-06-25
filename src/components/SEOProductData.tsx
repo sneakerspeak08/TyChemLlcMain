@@ -3,7 +3,7 @@ import { useProducts } from "@/hooks/useProducts";
 // This component renders product data in the HTML for SEO purposes
 // It's hidden from users but visible to search engines
 const SEOProductData = () => {
-  const products = useProducts();
+  const { products } = useProducts();
 
   return (
     <>

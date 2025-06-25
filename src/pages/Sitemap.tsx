@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
 
 const SitemapPage = () => {
-  const products = useProducts();
+  const { products } = useProducts();
   const baseUrl = 'https://tychem.net';
   const currentDate = new Date().toISOString().split('T')[0];
   
