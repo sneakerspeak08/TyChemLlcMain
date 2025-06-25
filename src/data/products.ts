@@ -292,7 +292,26 @@ export const chemicals: Chemical[] = [
         "Regular stability testing"
       ]
     }
-  }
+  },
+    {
+    id: 11,
+    name: "Tyler",
+    category: "Organic Acids",
+    description: "",
+    cas: "",
+    quantity: "12 totes",
+    location: "",
+    manufacturer: "",
+    purity: "",
+    applications: [
+    ],
+    safetyInfo: {
+      hazardClass: "",
+      storageTemp: "",
+      handling: [
+      ]
+    }
+  },
 ];
 
 export const categories = Array.from(new Set(chemicals.map(chem => chem.category)));
