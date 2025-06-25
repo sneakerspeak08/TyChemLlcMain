@@ -7,7 +7,7 @@
   
   [plugins.inputs]
     baseUrl = "https://tychem.net"
-    pretty = true
+    prettyURLs = true
     trailingSlash = false
     exclude = [
       "/admin",
