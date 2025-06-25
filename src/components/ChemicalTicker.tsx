@@ -8,6 +8,9 @@ const ChemicalTicker = () => {
   const navigate = useNavigate();
   const { products } = useProducts();
 
+  // Ensure products is always an array
+  const safeProducts = Array.isArray(products) ? products : [];
+
   useEffect(() => {
     const handleScroll = () => {
       const statsSection = document.getElementById('stats');
@@ -32,6 +35,11 @@ const ChemicalTicker = () => {
     navigate(`/products/${name.toLowerCase().replace(/\s+/g, '-')}`);
   };
 
+  // Don't render if no products
+  if (safeProducts.length === 0) {
+    return null;
+  }
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -43,7 +51,7 @@ const ChemicalTicker = () => {
         >
           <div className="relative overflow-hidden">
             <div className="flex animate-[ticker_60s_linear_infinite] whitespace-nowrap">
-              {products.map((chemical, index) => (
+              {safeProducts.map((chemical, index) => (
                 <button
                   key={`${chemical.id}-${index}`}
                   onClick={() => handleChemicalClick(chemical.name)}
@@ -55,7 +63,7 @@ const ChemicalTicker = () => {
                 </button>
               ))}
               {/* Duplicate for seamless loop */}
-              {products.map((chemical, index) => (
+              {safeProducts.map((chemical, index) => (
                 <button
                   key={`${chemical.id}-${index}-duplicate`}
                   onClick={() => handleChemicalClick(chemical.name)}

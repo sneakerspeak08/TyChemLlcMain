@@ -15,13 +15,16 @@ import SEOProductData from "@/components/SEOProductData";
 const ProductsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { products } = useProducts();
+  const { products, isLoading } = useProducts();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
   // Use the automatic sitemap notification system
   useSitemapNotification();
+
+  // Ensure products is always an array
+  const safeProducts = Array.isArray(products) ? products : [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -40,16 +43,16 @@ const ProductsPage = () => {
   useEffect(() => {
     const selectedChemicalId = location.state?.selectedChemicalId;
     if (selectedChemicalId) {
-      const chemical = products.find(c => c.id === selectedChemicalId);
+      const chemical = safeProducts.find(c => c.id === selectedChemicalId);
       if (chemical) {
         setSelectedChemical(chemical);
         setIsOfferDialogOpen(true);
         window.history.replaceState({}, document.title);
       }
     }
-  }, [location.state, products]);
+  }, [location.state, safeProducts]);
 
-  const filteredChemicals = products.filter(chemical => {
+  const filteredChemicals = safeProducts.filter(chemical => {
     const matchesSearch = 
       chemical.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       chemical.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -69,6 +72,22 @@ const ProductsPage = () => {
   const handleContactClick = () => {
     navigate('/', { state: { scrollToSection: 'contact' } });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar transparent={false} />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center">
+              <p className="text-gray-600">Loading products...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -153,6 +172,13 @@ const ProductsPage = () => {
                 <Button onClick={() => setSearchTerm("")} variant="outline">
                   Clear Search
                 </Button>
+              </div>
+            )}
+
+            {safeProducts.length === 0 && !isLoading && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-4">No products available at the moment.</p>
+                <p className="text-sm text-gray-400">Please check back later or contact us directly.</p>
               </div>
             )}
 
