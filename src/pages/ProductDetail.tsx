@@ -25,23 +25,39 @@ const ProductDetail = () => {
     }
   }, [product, navigate, products]);
 
-  if (!product) return null;
-
   // Update meta tags
   useEffect(() => {
-    document.title = `${product.name} | Tychem LLC`;
-    
-    // Update meta description
-    let metaDescription = document.querySelector('meta[name="description"]');
-    if (!metaDescription) {
-      metaDescription = document.createElement('meta');
-      metaDescription.setAttribute('name', 'description');
-      document.head.appendChild(metaDescription);
+    if (product) {
+      document.title = `${product.name} | Tychem LLC`;
+      
+      // Update meta description
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement('meta');
+        metaDescription.setAttribute('name', 'description');
+        document.head.appendChild(metaDescription);
+      }
+      metaDescription.setAttribute('content', 
+        `${product.name} - ${product.description} Available at Tychem LLC.`
+      );
     }
-    metaDescription.setAttribute('content', 
-      `${product.name} - ${product.description} Available at Tychem LLC.`
-    );
   }, [product]);
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar transparent={false} />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="max-w-4xl mx-auto text-center">
+              <p className="text-lg text-gray-600">Loading product...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
