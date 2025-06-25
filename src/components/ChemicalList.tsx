@@ -27,9 +27,9 @@ const ChemicalList = () => {
 
   return (
     <>
-      <section id="chemicals" className="py-20 md:py-32 bg-gray-50">
+      <section id="chemicals" className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-12">
             <div className="inline-block mb-6 px-3 py-1 rounded-full bg-tychem-50 border border-tychem-100">
               <p className="text-sm font-medium text-tychem-700">Latest Products</p>
             </div>

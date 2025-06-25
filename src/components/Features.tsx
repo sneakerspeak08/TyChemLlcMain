@@ -91,14 +91,14 @@ const Features = () => {
   };
 
   return (
-    <section className="py-20 md:py-32 bg-white overflow-hidden">
+    <section className="py-12 md:py-16 bg-white overflow-hidden">
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           ref={ref}
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.7 }}
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-12"
         >
           <div className="inline-block mb-6 px-3 py-1 rounded-full bg-tychem-50 border border-tychem-100">
             <p className="text-sm font-medium text-tychem-700">Why Choose Us</p>
@@ -138,7 +138,7 @@ const Features = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.7, delay: 0.6 }}
-          className="mt-16 text-center"
+          className="mt-12 text-center"
         >
           <motion.a
             href="#contact"

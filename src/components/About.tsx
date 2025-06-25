@@ -6,9 +6,9 @@ const About = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="about" className="py-20 md:py-32 overflow-hidden bg-white">
+    <section id="about" className="py-12 md:py-16 overflow-hidden bg-white">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-center">
           <motion.div
             ref={ref}
             initial={{ opacity: 0, x: -50 }}
@@ -49,21 +49,12 @@ const About = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-lg mb-8">
+            <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-xl font-semibold mb-4">Save Money, Save The Earth</h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600">
                 We love what we do as we are providing a winning solution for all involved! Instead of paying costly disposal fees, you could receive payment for your surplus materials. We buy big and small lots and everything is FOB your warehouse.
               </p>
             </div>
-            
-            <motion.a
-              href="#contact"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg font-medium transition-all duration-300 hover:bg-green-700"
-            >
-              Contact Us
-            </motion.a>
           </motion.div>
           
           <motion.div
