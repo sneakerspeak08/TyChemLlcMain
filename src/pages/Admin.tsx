@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Edit, Trash2, Save, X, Lock, Download, Copy, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Lock, Download, Copy, Globe, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Chemical } from "@/data/products";
-import { generateSitemap, downloadSitemap, copySitemapToClipboard } from "@/utils/sitemapGenerator";
+import { generateSitemap, downloadSitemap, copySitemapToClipboard, generateSitemapInstructions } from "@/utils/sitemapGenerator";
 
 const ADMIN_PASSWORD = "tychem2025"; // Change this to your desired password
 
@@ -250,7 +251,7 @@ const AdminPage = () => {
 
   const handleDownloadSitemap = () => {
     downloadSitemap(products);
-    toast.success('Sitemap downloaded successfully');
+    toast.success('Sitemap downloaded successfully! Upload this to replace your public/sitemap.xml file.');
   };
 
   const handleCopySitemap = async () => {
@@ -260,6 +261,12 @@ const AdminPage = () => {
     } catch (error) {
       toast.error('Failed to copy sitemap');
     }
+  };
+
+  const handleViewInstructions = () => {
+    const instructions = generateSitemapInstructions(products);
+    navigator.clipboard.writeText(instructions);
+    toast.success('Sitemap instructions copied to clipboard');
   };
 
   // Show login form if not authenticated
@@ -378,41 +385,67 @@ const AdminPage = () => {
           </TabsContent>
 
           <TabsContent value="seo" className="space-y-6">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Important:</strong> Your sitemap automatically reflects your current inventory of {products.length} products. 
+                Download the updated sitemap and replace your public/sitemap.xml file to keep search engines updated.
+              </AlertDescription>
+            </Alert>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Globe className="h-5 w-5 mr-2" />
-                    Dynamic Sitemap
+                    Live Inventory Sitemap
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-sm text-gray-600">
-                    Your sitemap automatically updates based on your current products. It includes {products.length} product pages plus your main pages.
+                    Your sitemap is generated from your current inventory. It includes {products.length} product pages plus your main pages.
                   </p>
                   
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Sitemap includes:</h4>
+                    <h4 className="font-medium mb-2">Current Sitemap includes:</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
                       <li>• Homepage (Priority: 1.0)</li>
                       <li>• Products page (Priority: 0.9)</li>
-                      <li>• {products.length} individual product pages (Priority: 0.8)</li>
+                      <li>• {products.length} product pages (Priority: 0.8):</li>
+                      {products.slice(0, 5).map((product, index) => (
+                        <li key={index} className="ml-4 text-xs">
+                          - {product.name}
+                        </li>
+                      ))}
+                      {products.length > 5 && (
+                        <li className="ml-4 text-xs text-gray-500">
+                          ... and {products.length - 5} more products
+                        </li>
+                      )}
                     </ul>
                   </div>
 
                   <div className="flex gap-3">
-                    <Button onClick={handleDownloadSitemap} variant="outline" className="flex-1">
+                    <Button onClick={handleDownloadSitemap} className="flex-1 bg-tychem-500 hover:bg-tychem-600">
                       <Download className="h-4 w-4 mr-2" />
-                      Download Sitemap
+                      Download Current Sitemap
                     </Button>
                     <Button onClick={handleCopySitemap} variant="outline" className="flex-1">
                       <Copy className="h-4 w-4 mr-2" />
-                      Copy to Clipboard
+                      Copy XML
                     </Button>
                   </div>
 
+                  <Button onClick={handleViewInstructions} variant="outline" className="w-full">
+                    📋 Copy Update Instructions
+                  </Button>
+
                   <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded">
-                    <strong>💡 SEO Tip:</strong> After updating products, download the new sitemap and submit it to Google Search Console for faster indexing.
+                    <strong>💡 SEO Workflow:</strong> 
+                    <br />1. Add/edit products above
+                    <br />2. Download updated sitemap
+                    <br />3. Replace public/sitemap.xml file
+                    <br />4. Submit to Google Search Console
                   </div>
                 </CardContent>
               </Card>
@@ -429,35 +462,40 @@ const AdminPage = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Structured Data</span>
-                      <span className="text-green-600 text-sm">✓ Active</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Product Schema</span>
                       <span className="text-green-600 text-sm">✓ Dynamic</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Sitemap</span>
-                      <span className="text-green-600 text-sm">✓ Auto-updating</span>
+                      <span className="text-sm">Product Schema</span>
+                      <span className="text-green-600 text-sm">✓ Live Updates</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Sitemap Generation</span>
+                      <span className="text-green-600 text-sm">✓ Real-time</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Robots.txt</span>
                       <span className="text-green-600 text-sm">✓ Configured</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Current Products</span>
+                      <span className="text-blue-600 text-sm font-medium">{products.length} items</span>
                     </div>
                   </div>
 
                   <div className="bg-green-50 p-4 rounded-lg">
                     <h4 className="font-medium text-green-800 mb-2">SEO Score: Excellent</h4>
                     <p className="text-sm text-green-700">
-                      Your site is fully optimized for search engines with dynamic content updates.
+                      Your site uses dynamic SEO with real-time inventory updates.
                     </p>
                   </div>
 
                   <div className="text-xs text-gray-500">
                     <strong>Next steps:</strong>
                     <ul className="mt-1 space-y-1">
-                      <li>• Submit sitemap to Google Search Console</li>
-                      <li>• Monitor keyword rankings</li>
-                      <li>• Build quality backlinks</li>
+                      <li>• Download & upload updated sitemap</li>
+                      <li>• Submit to Google Search Console</li>
+                      <li>• Monitor product page indexing</li>
+                      <li>• Track keyword rankings</li>
                     </ul>
                   </div>
                 </CardContent>
@@ -466,7 +504,7 @@ const AdminPage = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Current Sitemap Preview</CardTitle>
+                <CardTitle>Live Sitemap Preview (Current Inventory)</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
@@ -474,6 +512,9 @@ const AdminPage = () => {
                     {generateSitemap(products)}
                   </pre>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  ☝️ This sitemap reflects your current {products.length} products and updates automatically when you add/remove items.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>

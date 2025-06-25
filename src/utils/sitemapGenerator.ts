@@ -20,7 +20,7 @@ export const generateSitemap = (products: Chemical[]): string => {
   ];
 
   const productUrls = products.map(product => ({
-    loc: `${baseUrl}/products/${product.name.toLowerCase().replace(/\s+/g, '-')}`,
+    loc: `${baseUrl}/products/${product.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`,
     lastmod: currentDate,
     changefreq: 'weekly',
     priority: '0.8'
@@ -51,11 +51,39 @@ export const downloadSitemap = (products: Chemical[]) => {
   const link = document.createElement('a');
   link.href = url;
   link.download = 'sitemap.xml';
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
 
-export const copySitemapToClipboard = (products: Chemical[]) => {
+export const copySitemapToClipboard = async (products: Chemical[]) => {
   const sitemapContent = generateSitemap(products);
-  navigator.clipboard.writeText(sitemapContent);
+  await navigator.clipboard.writeText(sitemapContent);
+};
+
+// Function to update the public sitemap.xml file (for manual replacement)
+export const generateSitemapInstructions = (products: Chemical[]): string => {
+  return `
+🎯 **SITEMAP UPDATE INSTRUCTIONS**
+
+Your current inventory has ${products.length} products. To update your live sitemap:
+
+1. **Download the sitemap** using the button in the admin panel
+2. **Replace the public/sitemap.xml** file with the downloaded version
+3. **Submit to Google Search Console** for faster indexing
+
+**Current Products in Sitemap:**
+${products.map((product, index) => `${index + 1}. ${product.name}`).join('\n')}
+
+**URLs Generated:**
+- Homepage: https://tychem.net/
+- Products: https://tychem.net/products
+${products.map(product => `- ${product.name}: https://tychem.net/products/${product.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`).join('\n')}
+
+**Next Steps:**
+1. Download the updated sitemap
+2. Submit to Google Search Console
+3. Monitor indexing status
+  `;
 };
