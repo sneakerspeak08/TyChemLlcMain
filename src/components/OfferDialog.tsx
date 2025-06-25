@@ -15,10 +15,10 @@ interface OfferDialogProps {
   isOpen: boolean;
   onClose: () => void;
   productName: string;
-  productCas: string;
+  productCas: string; // Keep for compatibility but won't use
 }
 
-export function OfferDialog({ isOpen, onClose, productName, productCas }: OfferDialogProps) {
+export function OfferDialog({ isOpen, onClose, productName }: OfferDialogProps) {
   const [formData, setFormData] = useState({
     companyName: "",
     contactName: "",
@@ -26,8 +26,7 @@ export function OfferDialog({ isOpen, onClose, productName, productCas }: OfferD
     phone: "",
     offerPrice: "",
     comments: "",
-    productName,
-    productCas
+    productName
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -46,8 +45,7 @@ export function OfferDialog({ isOpen, onClose, productName, productCas }: OfferD
           phone: "",
           offerPrice: "",
           comments: "",
-          productName,
-          productCas
+          productName
         });
       }
     } finally {
