@@ -50,8 +50,8 @@ const ProductsPage = () => {
   };
 
   const handleContactClick = () => {
-    // Navigate to home page and then scroll to contact section
-    navigate('/', { state: { scrollToContact: true } });
+    // Navigate to home page with contact section target
+    navigate('/', { state: { scrollToSection: 'contact' } });
   };
 
   return (
