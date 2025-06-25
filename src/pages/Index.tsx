@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Stats from "@/components/Stats";
@@ -12,6 +13,8 @@ import ScrollToTop from "@/components/ScrollToTop";
 import ChemicalTicker from "@/components/ChemicalTicker";
 
 const Index = () => {
+  const location = useLocation();
+
   useEffect(() => {
     // Initialize scroll animations
     const scrollElements = document.querySelectorAll(".scroll-trigger-fade-in");
@@ -43,6 +46,29 @@ const Index = () => {
       window.removeEventListener("scroll", handleScrollAnimation);
     };
   }, []);
+
+  // Handle scrolling to contact section when navigated from products page
+  useEffect(() => {
+    if (location.state?.scrollToContact) {
+      // Small delay to ensure the page has loaded
+      setTimeout(() => {
+        const contactSection = document.getElementById('contact');
+        if (contactSection) {
+          const offset = 80; // Height of the fixed navbar
+          const elementPosition = contactSection.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+          });
+        }
+      }, 100);
+      
+      // Clear the state to prevent scrolling on subsequent visits
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   return (
     <motion.div
