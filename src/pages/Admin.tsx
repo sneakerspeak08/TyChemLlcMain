@@ -249,16 +249,23 @@ const AdminPage = () => {
           return;
         }
 
-        // Validate each product has required fields
-        const validProducts = importedData.filter(product => {
-          return product && 
-                 typeof product.name === 'string' && 
-                 typeof product.description === 'string' && 
-                 typeof product.quantity === 'string' &&
-                 product.name.trim() !== '' &&
-                 product.description.trim() !== '' &&
-                 product.quantity.trim() !== '';
-        });
+        // Validate each product has required fields and remove id field
+        const validProducts = importedData
+          .filter(product => {
+            return product && 
+                   typeof product.name === 'string' && 
+                   typeof product.description === 'string' && 
+                   typeof product.quantity === 'string' &&
+                   product.name.trim() !== '' &&
+                   product.description.trim() !== '' &&
+                   product.quantity.trim() !== '';
+          })
+          .map(product => ({
+            // Explicitly exclude id field to avoid database conflicts
+            name: product.name.trim(),
+            description: product.description.trim(),
+            quantity: product.quantity.trim()
+          }));
 
         if (validProducts.length === 0) {
           toast.error('No valid products found in the file');
@@ -277,7 +284,7 @@ const AdminPage = () => {
 
         setIsSaving(true);
         
-        // Use saveProducts to replace all products
+        // Use saveProducts to replace all products (this handles ID generation properly)
         const success = await saveProducts(validProducts);
         
         if (success) {
@@ -393,6 +400,8 @@ const AdminPage = () => {
               <AlertDescription>
                 <strong>📁 Import/Export:</strong> Export your products as JSON for backup, or import a JSON file to replace all products. 
                 Import format: <code>[&#123;"name": "Product Name", "description": "Description", "quantity": "Amount"&#125;]</code>
+                <br />
+                <strong>Note:</strong> When importing, the database will automatically assign new IDs to all products.
               </AlertDescription>
             </Alert>
 
