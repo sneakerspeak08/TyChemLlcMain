@@ -143,7 +143,7 @@ export class ProductService {
     }
   }
 
-  // Replace all products (for bulk import)
+  // Replace all products (for bulk import) - FIXED VERSION
   static async replaceAllProducts(products: Omit<Chemical, 'id'>[]): Promise<Chemical[]> {
     try {
       // First, delete all existing products
@@ -165,7 +165,7 @@ export class ProductService {
         return []
       }
 
-      // Then insert new products
+      // Then insert new products (excluding id since it's auto-generated)
       const productsInsert: ProductInsert[] = products.map(product => ({
         name: product.name,
         description: product.description,

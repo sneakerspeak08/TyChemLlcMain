@@ -49,11 +49,10 @@ export const useProducts = () => {
         return false;
       }
 
-      // Then insert all new products
+      // Then insert all new products (excluding id since it's auto-generated)
       const { error: insertError } = await supabase
         .from('products')
         .insert(newProducts.map(product => ({
-          id: product.id,
           name: product.name,
           description: product.description,
           quantity: product.quantity
@@ -65,7 +64,8 @@ export const useProducts = () => {
         return false;
       }
 
-      setProducts(newProducts);
+      // Reload products to get the new auto-generated IDs
+      await loadProducts();
       toast.success('Products saved to database successfully!');
       return true;
     } catch (error) {
