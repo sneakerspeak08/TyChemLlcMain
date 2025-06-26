@@ -106,20 +106,37 @@ export class ProductService {
     }
   }
 
-  // Delete a product
+  // Delete a product - FIXED VERSION
   static async deleteProduct(id: number): Promise<void> {
     try {
-      const { error } = await supabase
+      console.log(`🗑️ Attempting to delete product with ID: ${id}`)
+      
+      // First verify the product exists
+      const { data: existingProduct, error: fetchError } = await supabase
+        .from('products')
+        .select('id, name')
+        .eq('id', id)
+        .single()
+
+      if (fetchError) {
+        console.error('Error checking if product exists:', fetchError)
+        throw new Error(`Product with ID ${id} not found`)
+      }
+
+      console.log(`📦 Found product to delete: ${existingProduct.name}`)
+
+      // Now delete the product
+      const { error: deleteError } = await supabase
         .from('products')
         .delete()
         .eq('id', id)
 
-      if (error) {
-        console.error('Error deleting product:', error)
-        throw error
+      if (deleteError) {
+        console.error('Error deleting product:', deleteError)
+        throw deleteError
       }
 
-      console.log(`✅ Successfully deleted product with id: ${id}`)
+      console.log(`✅ Successfully deleted product: ${existingProduct.name} (ID: ${id})`)
     } catch (error) {
       console.error('❌ Failed to delete product from database:', error)
       throw error

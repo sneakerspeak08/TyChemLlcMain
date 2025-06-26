@@ -119,20 +119,23 @@ export const useProducts = () => {
     }
 
     try {
+      console.log(`🗑️ Starting delete process for product ID: ${id}`);
+      
+      // Call the service to delete from database
       await ProductService.deleteProduct(id);
       
-      // Update local state immediately
+      // Update local state immediately after successful database deletion
       setProducts(prev => {
         const newProducts = prev.filter(p => p.id !== id);
-        console.log(`🗑️ Product deleted. Remaining products: ${newProducts.length}`);
+        console.log(`🔄 Local state updated. Remaining products: ${newProducts.length}`);
         return newProducts;
       });
       
       toast.success('✅ Product deleted from database! Changes are live on the website.');
       return true;
     } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Failed to delete product. Please try again.');
+      console.error('❌ Error deleting product:', error);
+      toast.error(`Failed to delete product: ${error.message}`);
       return false;
     }
   };
