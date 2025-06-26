@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Plus, Edit, Trash2, Save, X, Lock, Globe, AlertCircle, CheckCircle, ExternalLink, Download, Copy, Upload, FileText, Zap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -90,12 +90,13 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
 
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { products, isLoading, deleteProduct, addProduct, updateProduct, refreshProducts } = useProducts();
+  const { products, isLoading, deleteProduct, addProduct, updateProduct, refreshProducts, saveProducts } = useProducts();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Chemical | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [sitemapStatus, setSitemapStatus] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -224,6 +225,82 @@ const AdminPage = () => {
     toast.success('Products exported successfully');
   };
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+      toast.error('Please select a JSON file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string);
+        
+        // Validate the imported data
+        if (!Array.isArray(importedData)) {
+          toast.error('Invalid file format: Expected an array of products');
+          return;
+        }
+
+        // Validate each product has required fields
+        const validProducts = importedData.filter(product => {
+          return product && 
+                 typeof product.name === 'string' && 
+                 typeof product.description === 'string' && 
+                 typeof product.quantity === 'string' &&
+                 product.name.trim() !== '' &&
+                 product.description.trim() !== '' &&
+                 product.quantity.trim() !== '';
+        });
+
+        if (validProducts.length === 0) {
+          toast.error('No valid products found in the file');
+          return;
+        }
+
+        if (validProducts.length !== importedData.length) {
+          toast.warning(`${importedData.length - validProducts.length} invalid products were skipped`);
+        }
+
+        // Confirm the import
+        const confirmMessage = `This will replace all ${products.length} existing products with ${validProducts.length} imported products. Are you sure?`;
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+
+        setIsSaving(true);
+        
+        // Use saveProducts to replace all products
+        const success = await saveProducts(validProducts);
+        
+        if (success) {
+          toast.success(`✅ Successfully imported ${validProducts.length} products! Database updated.`);
+        } else {
+          toast.error('Failed to import products to database');
+        }
+        
+        setIsSaving(false);
+      } catch (error) {
+        console.error('Import error:', error);
+        toast.error('Error reading file: Invalid JSON format');
+      }
+    };
+    
+    reader.readAsText(file);
+    
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   if (!isAuthenticated) {
     return <AdminLogin onLogin={handleLogin} />;
   }
@@ -278,8 +355,20 @@ const AdminPage = () => {
               <h2 className="text-2xl font-semibold">Products ({products.length})</h2>
               <div className="flex gap-4">
                 <Button onClick={handleExportData} variant="outline">
-                  Export Data
+                  <Download className="h-4 w-4 mr-2" />
+                  Export JSON
                 </Button>
+                <Button onClick={handleImportClick} variant="outline" disabled={isSaving}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import JSON
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportData}
+                  className="hidden"
+                />
                 <Button 
                   onClick={handleAddProduct} 
                   className="bg-tychem-500 hover:bg-tychem-600"
@@ -296,6 +385,14 @@ const AdminPage = () => {
               <AlertDescription>
                 <strong>🚀 DATABASE CONNECTED:</strong> All changes are saved directly to the Supabase database! 
                 Products are synced in real-time across all pages.
+              </AlertDescription>
+            </Alert>
+
+            <Alert>
+              <FileText className="h-4 w-4" />
+              <AlertDescription>
+                <strong>📁 Import/Export:</strong> Export your products as JSON for backup, or import a JSON file to replace all products. 
+                Import format: <code>[{"name": "Product Name", "description": "Description", "quantity": "Amount"}]</code>
               </AlertDescription>
             </Alert>
 
@@ -357,14 +454,24 @@ const AdminPage = () => {
             {products.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-gray-500 mb-4">No products found in database</p>
-                <Button 
-                  onClick={handleAddProduct} 
-                  className="bg-tychem-500 hover:bg-tychem-600"
-                  disabled={isSaving}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Product
-                </Button>
+                <div className="flex gap-4 justify-center">
+                  <Button 
+                    onClick={handleAddProduct} 
+                    className="bg-tychem-500 hover:bg-tychem-600"
+                    disabled={isSaving}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Product
+                  </Button>
+                  <Button 
+                    onClick={handleImportClick} 
+                    variant="outline"
+                    disabled={isSaving}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import Products
+                  </Button>
+                </div>
               </div>
             )}
           </TabsContent>
