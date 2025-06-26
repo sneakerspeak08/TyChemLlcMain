@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
+// Declare the supabase variable at module level
+let supabase: any
+
 // Check if we're in development and missing env vars
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase environment variables not found. Using fallback mode.')
@@ -23,10 +26,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
     })
   }
   
-  export const supabase = mockClient as any
+  supabase = mockClient
 } else {
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  supabase = createClient(supabaseUrl, supabaseAnonKey)
 }
+
+// Export at module level
+export { supabase }
 
 // Types for our database
 export interface Database {
