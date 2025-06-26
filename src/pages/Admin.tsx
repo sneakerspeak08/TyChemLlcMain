@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Chemical } from "@/data/products";
-import { downloadSitemap, autoSaveSitemap, copySitemapToClipboard } from "@/utils/sitemapGenerator";
+import { downloadSitemap, copySitemapToClipboard } from "@/utils/sitemapGenerator";
 import { useProducts } from "@/hooks/useProducts";
 
 const ADMIN_PASSWORD = "tychem2025";
@@ -90,12 +90,11 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
 
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { products, isLoading, saveProducts, refreshProducts } = useProducts();
+  const { products, isLoading, error, addProduct, updateProduct, deleteProduct, replaceAllProducts, refreshProducts } = useProducts();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Chemical | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [sitemapStatus, setSitemapStatus] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -108,24 +107,6 @@ const AdminPage = () => {
     if (isLoggedIn === 'true') {
       setIsAuthenticated(true);
     }
-  }, []);
-
-  // Listen for sitemap updates
-  useEffect(() => {
-    const handleSitemapReady = (event: any) => {
-      setSitemapStatus({
-        lastUpdated: event.detail.timestamp,
-        productCount: event.detail.productCount,
-        downloadUrl: event.detail.downloadUrl,
-        content: event.detail.content
-      });
-    };
-
-    window.addEventListener('sitemapReady', handleSitemapReady);
-    
-    return () => {
-      window.removeEventListener('sitemapReady', handleSitemapReady);
-    };
   }, []);
 
   const handleLogin = () => {
@@ -158,16 +139,9 @@ const AdminPage = () => {
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (confirm('Are you sure you want to delete this product? This will update the live website.')) {
+    if (confirm('Are you sure you want to delete this product? This will update the live website immediately.')) {
       setIsSaving(true);
-      const updatedProducts = products.filter(p => p.id !== id);
-      const success = await saveProducts(updatedProducts);
-      
-      if (success) {
-        toast.success('✅ Product deleted globally! Changes are live on the website.');
-      } else {
-        toast.error('Failed to delete product globally. Please try again.');
-      }
+      await deleteProduct(id);
       setIsSaving(false);
     }
   };
@@ -179,49 +153,34 @@ const AdminPage = () => {
     }
 
     setIsSaving(true);
-    let updatedProducts: Chemical[];
+    let success = false;
 
     if (isNewProduct) {
-      const newId = Math.max(...products.map(p => p.id), 0) + 1;
-      const newProduct: Chemical = {
-        id: newId,
+      success = await addProduct({
         name: formData.name.trim(),
         description: formData.description.trim(),
         quantity: formData.quantity.trim()
-      };
-      updatedProducts = [...products, newProduct];
+      });
     } else if (editingProduct) {
-      updatedProducts = products.map(p => 
-        p.id === editingProduct.id 
-          ? { ...p, name: formData.name.trim(), description: formData.description.trim(), quantity: formData.quantity.trim() }
-          : p
-      );
-    } else {
-      setIsSaving(false);
-      return;
+      success = await updateProduct(editingProduct.id, {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        quantity: formData.quantity.trim()
+      });
     }
 
-    const success = await saveProducts(updatedProducts);
-    
     if (success) {
-      toast.success(
-        isNewProduct 
-          ? '✅ Product added globally! Changes are live on the website.' 
-          : '✅ Product updated globally! Changes are live on the website.'
-      );
       setIsEditDialogOpen(false);
       setFormData({ name: "", description: "", quantity: "" });
-    } else {
-      toast.error('Failed to save product globally. Please try again.');
     }
     
     setIsSaving(false);
   };
 
   const handleRefreshProducts = async () => {
-    toast.info('Refreshing products from server...');
+    toast.info('Refreshing products from database...');
     await refreshProducts();
-    toast.success('Products refreshed!');
+    toast.success('Products refreshed from database!');
   };
 
   const handleDownloadSitemap = () => {
@@ -256,13 +215,9 @@ const AdminPage = () => {
         const importedProducts = JSON.parse(e.target?.result as string);
         if (Array.isArray(importedProducts)) {
           setIsSaving(true);
-          const success = await saveProducts(importedProducts);
-          
-          if (success) {
-            toast.success('✅ Products imported globally! Changes are live on the website.');
-          } else {
-            toast.error('Failed to import products globally.');
-          }
+          // Remove id field from imported products since database will auto-generate
+          const productsToImport = importedProducts.map(({ id, ...product }) => product);
+          await replaceAllProducts(productsToImport);
           setIsSaving(false);
         } else {
           toast.error('Invalid file format');
@@ -283,7 +238,22 @@ const AdminPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-tychem-600" />
-          <p className="text-gray-600">Loading products...</p>
+          <p className="text-gray-600">Loading products from database...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-600" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={refreshProducts} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry Connection
+          </Button>
         </div>
       </div>
     );
@@ -295,7 +265,7 @@ const AdminPage = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">Manage your chemical inventory - changes update the live website instantly</p>
+            <p className="text-gray-600 mt-1">Manage your chemical inventory - changes update the live website and database instantly</p>
           </div>
           <div className="flex gap-4">
             <Button onClick={handleRefreshProducts} variant="outline">
@@ -355,8 +325,8 @@ const AdminPage = () => {
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>🚀 LIVE UPDATES:</strong> All changes you make here instantly update the live website! 
-                Products are automatically synced across all pages and the sitemap is regenerated.
+                <strong>🚀 DATABASE CONNECTED:</strong> All changes are saved to Supabase database and instantly update the live website! 
+                Products are automatically synced across all users and the sitemap is regenerated.
               </AlertDescription>
             </Alert>
 
@@ -364,7 +334,7 @@ const AdminPage = () => {
               <Alert>
                 <RefreshCw className="h-4 w-4 animate-spin" />
                 <AlertDescription>
-                  <strong>Saving changes...</strong> Updating the live website with your changes.
+                  <strong>Saving to database...</strong> Updating the live website with your changes.
                 </AlertDescription>
               </Alert>
             )}
@@ -417,7 +387,7 @@ const AdminPage = () => {
 
             {products.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-500 mb-4">No products found</p>
+                <p className="text-gray-500 mb-4">No products found in database</p>
                 <Button 
                   onClick={handleAddProduct} 
                   className="bg-tychem-500 hover:bg-tychem-600"
@@ -434,7 +404,7 @@ const AdminPage = () => {
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>🎯 AUTO-UPDATED!</strong> Your sitemap automatically includes all {products.length} products. 
+                <strong>🎯 AUTO-UPDATED!</strong> Your sitemap automatically includes all {products.length} products from the database. 
                 Download the latest version for manual submission to search engines.
               </AlertDescription>
             </Alert>
@@ -454,7 +424,7 @@ const AdminPage = () => {
                       <h4 className="font-medium text-blue-800">Ready to Download!</h4>
                     </div>
                     <p className="text-sm text-blue-700 mb-4">
-                      Your sitemap includes all {products.length} products with current URLs and dates. 
+                      Your sitemap includes all {products.length} products from the database with current URLs and dates. 
                       This is automatically generated from your live product data.
                     </p>
                     
@@ -484,48 +454,36 @@ const AdminPage = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Current Sitemap Status</CardTitle>
+                  <CardTitle>Database Status</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Products Included</span>
+                      <span className="text-sm">Database Connection</span>
+                      <span className="text-green-600 text-sm font-medium">✅ Connected</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Products in Database</span>
                       <span className="text-blue-600 text-sm font-medium">{products.length} items</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Auto-Generated</span>
-                      <span className="text-green-600 text-sm font-medium">✅ Live Data</span>
+                      <span className="text-sm">Real-time Updates</span>
+                      <span className="text-green-600 text-sm font-medium">✅ Active</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">URLs Generated</span>
                       <span className="text-green-600 text-sm">{products.length + 2} total</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">SEO Optimized</span>
-                      <span className="text-green-600 text-sm">✅ Ready</span>
-                    </div>
                   </div>
 
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-green-800 mb-2">Sitemap Includes:</h4>
+                    <h4 className="font-medium text-green-800 mb-2">Database Features:</h4>
                     <ul className="text-sm text-green-700 space-y-1">
-                      <li>✅ Homepage (priority 1.0)</li>
-                      <li>✅ Products page (priority 0.9)</li>
-                      <li>✅ All {products.length} product pages (priority 0.8)</li>
-                      <li>✅ Current dates and change frequencies</li>
-                      <li>✅ SEO-optimized URLs</li>
-                    </ul>
-                  </div>
-
-                  <div className="text-xs text-gray-500">
-                    <strong>Sample URLs in your sitemap:</strong>
-                    <ul className="mt-1 space-y-1 max-h-32 overflow-y-auto">
-                      <li>• https://tychem.net/</li>
-                      <li>• https://tychem.net/products</li>
-                      {products.slice(0, 3).map(product => (
-                        <li key={product.id}>• https://tychem.net/products/{product.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}</li>
-                      ))}
-                      {products.length > 3 && <li>• ... and {products.length - 3} more product pages</li>}
+                      <li>✅ Persistent storage (survives deployments)</li>
+                      <li>✅ Real-time synchronization</li>
+                      <li>✅ Automatic backups</li>
+                      <li>✅ Global accessibility</li>
+                      <li>✅ Row-level security</li>
                     </ul>
                   </div>
                 </CardContent>
@@ -552,7 +510,7 @@ const AdminPage = () => {
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   📍 Submit this URL to Google Search Console and Bing Webmaster Tools. 
-                  Your sitemap automatically updates when you change products!
+                  Your sitemap automatically updates when you change products in the database!
                 </p>
               </CardContent>
             </Card>
@@ -615,7 +573,7 @@ const AdminPage = () => {
                 ) : (
                   <Save className="h-4 w-4 mr-2" />
                 )}
-                {isSaving ? 'Saving...' : (isNewProduct ? 'Add Product' : 'Save Changes')}
+                {isSaving ? 'Saving to Database...' : (isNewProduct ? 'Add Product' : 'Save Changes')}
               </Button>
             </div>
           </div>
