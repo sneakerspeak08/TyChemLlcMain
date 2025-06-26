@@ -5,6 +5,12 @@ export class ProductService {
   // Get all products from Supabase
   static async getAllProducts(): Promise<Chemical[]> {
     try {
+      // First test if we can connect to Supabase
+      const isConnected = await this.testConnection()
+      if (!isConnected) {
+        throw new Error('Supabase connection failed')
+      }
+
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -15,15 +21,20 @@ export class ProductService {
         throw error
       }
 
-      // Always return the actual database data, even if empty
-      return data.map(product => ({
+      // IMPORTANT: Always return the actual database data, even if it's an empty array
+      // An empty array means the database is connected but has no products
+      // This is different from a connection error
+      const products = (data || []).map(product => ({
         id: product.id,
         name: product.name,
         description: product.description,
         quantity: product.quantity
       }))
+
+      console.log(`✅ Successfully loaded ${products.length} products from Supabase database`)
+      return products
     } catch (error) {
-      console.error('Failed to fetch products from database:', error)
+      console.error('❌ Failed to fetch products from database:', error)
       throw error
     }
   }
@@ -48,6 +59,7 @@ export class ProductService {
         throw error
       }
 
+      console.log(`✅ Successfully added product: ${data.name}`)
       return {
         id: data.id,
         name: data.name,
@@ -55,7 +67,7 @@ export class ProductService {
         quantity: data.quantity
       }
     } catch (error) {
-      console.error('Failed to add product to database:', error)
+      console.error('❌ Failed to add product to database:', error)
       throw error
     }
   }
@@ -81,6 +93,7 @@ export class ProductService {
         throw error
       }
 
+      console.log(`✅ Successfully updated product: ${data.name}`)
       return {
         id: data.id,
         name: data.name,
@@ -88,7 +101,7 @@ export class ProductService {
         quantity: data.quantity
       }
     } catch (error) {
-      console.error('Failed to update product in database:', error)
+      console.error('❌ Failed to update product in database:', error)
       throw error
     }
   }
@@ -106,9 +119,9 @@ export class ProductService {
         throw error
       }
 
-      console.log(`Successfully deleted product with id: ${id}`)
+      console.log(`✅ Successfully deleted product with id: ${id}`)
     } catch (error) {
-      console.error('Failed to delete product from database:', error)
+      console.error('❌ Failed to delete product from database:', error)
       throw error
     }
   }
@@ -127,8 +140,11 @@ export class ProductService {
         throw deleteError
       }
 
+      console.log('✅ Successfully cleared all existing products')
+
       // If no products to insert, return empty array
       if (products.length === 0) {
+        console.log('✅ No products to import, database is now empty')
         return []
       }
 
@@ -149,28 +165,47 @@ export class ProductService {
         throw error
       }
 
-      return data.map(product => ({
+      const result = data.map(product => ({
         id: product.id,
         name: product.name,
         description: product.description,
         quantity: product.quantity
       }))
+
+      console.log(`✅ Successfully imported ${result.length} products`)
+      return result
     } catch (error) {
-      console.error('Failed to replace products in database:', error)
+      console.error('❌ Failed to replace products in database:', error)
       throw error
     }
   }
 
-  // Check if Supabase is properly connected
+  // Check if Supabase is properly connected and accessible
   static async testConnection(): Promise<boolean> {
     try {
+      // Check if environment variables are present
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.log('❌ Supabase environment variables not found')
+        return false
+      }
+
+      // Try a simple query to test the connection
       const { error } = await supabase
         .from('products')
         .select('count', { count: 'exact', head: true })
 
-      return !error
+      if (error) {
+        console.error('❌ Supabase connection test failed:', error)
+        return false
+      }
+
+      console.log('✅ Supabase connection test successful')
+      return true
     } catch (error) {
-      console.error('Supabase connection test failed:', error)
+      console.error('❌ Supabase connection test failed:', error)
       return false
     }
   }
@@ -189,15 +224,17 @@ export class ProductService {
         async () => {
           // Fetch updated products when any change occurs
           try {
+            console.log('🔄 Real-time update detected, fetching latest products...')
             const products = await this.getAllProducts()
             callback(products)
           } catch (error) {
-            console.error('Error fetching updated products:', error)
+            console.error('❌ Error fetching updated products:', error)
           }
         }
       )
       .subscribe()
 
+    console.log('🔄 Subscribed to real-time product updates')
     return subscription
   }
 }

@@ -16,6 +16,7 @@ export const useProducts = () => {
     // Only subscribe to real-time updates if Supabase is connected
     if (isSupabaseConnected) {
       const subscription = ProductService.subscribeToProducts((updatedProducts) => {
+        console.log(`🔄 Real-time update: ${updatedProducts.length} products`);
         setProducts(updatedProducts);
       });
 
@@ -30,9 +31,9 @@ export const useProducts = () => {
       setIsLoading(true);
       setError(null);
       
-      // Check if Supabase is connected
+      // Check if Supabase environment variables are present
       if (!isSupabaseConnected) {
-        console.log('Supabase not connected, using default products');
+        console.log('⚠️ Supabase not configured, using default products');
         setProducts(getDefaultProducts());
         return;
       }
@@ -40,25 +41,35 @@ export const useProducts = () => {
       // Test connection first
       const isConnected = await ProductService.testConnection();
       if (!isConnected) {
-        throw new Error('Database connection failed');
+        throw new Error('Database connection failed - check your Supabase configuration');
       }
 
+      // Load products from database
       const loadedProducts = await ProductService.getAllProducts();
+      
+      // CRITICAL: Always use the database result, even if it's empty
+      // Empty array = database is connected but has no products (user deleted them all)
+      // This is different from a connection error
       setProducts(loadedProducts);
       
-      // If no products in database and this is the first load, don't fall back to defaults
-      // Let the admin add products manually or import them
-      console.log(`Loaded ${loadedProducts.length} products from database`);
+      if (loadedProducts.length === 0) {
+        console.log('📭 Database is connected but contains no products');
+      } else {
+        console.log(`📦 Loaded ${loadedProducts.length} products from database`);
+      }
       
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error('❌ Error loading products:', error);
       setError('Failed to connect to database. Using default products.');
-      // Only fall back to default products if Supabase is not connected
+      
+      // Only fall back to default products if Supabase is not configured
+      // If Supabase is configured but there's an error, show the error
       if (!isSupabaseConnected) {
         setProducts(getDefaultProducts());
       } else {
-        // If Supabase is connected but there's an error, show empty state
+        // Show empty state - let user know there's a connection issue
         setProducts([]);
+        toast.error('Database connection failed. Please check your Supabase configuration.');
       }
     } finally {
       setIsLoading(false);
@@ -109,7 +120,14 @@ export const useProducts = () => {
 
     try {
       await ProductService.deleteProduct(id);
-      setProducts(prev => prev.filter(p => p.id !== id));
+      
+      // Update local state immediately
+      setProducts(prev => {
+        const newProducts = prev.filter(p => p.id !== id);
+        console.log(`🗑️ Product deleted. Remaining products: ${newProducts.length}`);
+        return newProducts;
+      });
+      
       toast.success('✅ Product deleted from database! Changes are live on the website.');
       return true;
     } catch (error) {
@@ -128,7 +146,7 @@ export const useProducts = () => {
     try {
       const replacedProducts = await ProductService.replaceAllProducts(newProducts);
       setProducts(replacedProducts);
-      toast.success('✅ Products imported to database! Changes are live on the website.');
+      toast.success(`✅ ${replacedProducts.length} products imported to database! Changes are live on the website.`);
       return true;
     } catch (error) {
       console.error('Error replacing products:', error);
