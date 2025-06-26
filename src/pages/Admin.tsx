@@ -214,7 +214,14 @@ const AdminPage = () => {
   };
 
   const handleExportData = () => {
-    const dataStr = JSON.stringify(products, null, 2);
+    // Export only the essential fields, excluding database-specific fields
+    const exportData = products.map(product => ({
+      name: product.name,
+      description: product.description,
+      quantity: product.quantity
+    }));
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -222,7 +229,7 @@ const AdminPage = () => {
     link.download = 'tychem-products.json';
     link.click();
     URL.revokeObjectURL(url);
-    toast.success('Products exported successfully');
+    toast.success('Products exported successfully (clean format without database IDs)');
   };
 
   const handleImportClick = () => {
@@ -249,10 +256,11 @@ const AdminPage = () => {
           return;
         }
 
-        // Validate each product has required fields and remove id field
+        // Clean and validate each product - strip ALL database fields
         const validProducts = importedData
           .filter(product => {
             return product && 
+                   typeof product === 'object' &&
                    typeof product.name === 'string' && 
                    typeof product.description === 'string' && 
                    typeof product.quantity === 'string' &&
@@ -261,14 +269,14 @@ const AdminPage = () => {
                    product.quantity.trim() !== '';
           })
           .map(product => ({
-            // Explicitly exclude id field to avoid database conflicts
-            name: product.name.trim(),
-            description: product.description.trim(),
-            quantity: product.quantity.trim()
+            // ONLY include the 3 essential fields, completely ignore all other fields
+            name: String(product.name).trim(),
+            description: String(product.description).trim(),
+            quantity: String(product.quantity).trim()
           }));
 
         if (validProducts.length === 0) {
-          toast.error('No valid products found in the file');
+          toast.error('No valid products found in the file. Each product must have name, description, and quantity fields.');
           return;
         }
 
@@ -288,7 +296,7 @@ const AdminPage = () => {
         const success = await saveProducts(validProducts);
         
         if (success) {
-          toast.success(`✅ Successfully imported ${validProducts.length} products! Database updated.`);
+          toast.success(`✅ Successfully imported ${validProducts.length} products! Database updated with new IDs.`);
         } else {
           toast.error('Failed to import products to database');
         }
@@ -297,6 +305,7 @@ const AdminPage = () => {
       } catch (error) {
         console.error('Import error:', error);
         toast.error('Error reading file: Invalid JSON format');
+        setIsSaving(false);
       }
     };
     
@@ -398,10 +407,10 @@ const AdminPage = () => {
             <Alert>
               <FileText className="h-4 w-4" />
               <AlertDescription>
-                <strong>📁 Import/Export:</strong> Export your products as JSON for backup, or import a JSON file to replace all products. 
-                Import format: <code>[&#123;"name": "Product Name", "description": "Description", "quantity": "Amount"&#125;]</code>
+                <strong>📁 Import/Export:</strong> Export creates a clean JSON with only essential fields (name, description, quantity). 
+                Import accepts any JSON with these fields and automatically assigns new database IDs.
                 <br />
-                <strong>Note:</strong> When importing, the database will automatically assign new IDs to all products.
+                <strong>✅ Compatible:</strong> You can export and re-import the same file without ID conflicts!
               </AlertDescription>
             </Alert>
 
