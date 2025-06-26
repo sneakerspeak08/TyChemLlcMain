@@ -8,11 +8,13 @@ export const useProducts = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isSupabaseConnected = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+
   useEffect(() => {
     loadProducts();
     
     // Only subscribe to real-time updates if Supabase is connected
-    if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    if (isSupabaseConnected) {
       const subscription = ProductService.subscribeToProducts((updatedProducts) => {
         setProducts(updatedProducts);
       });
@@ -21,7 +23,7 @@ export const useProducts = () => {
         subscription.unsubscribe();
       };
     }
-  }, []);
+  }, [isSupabaseConnected]);
 
   const loadProducts = async () => {
     try {
@@ -29,26 +31,42 @@ export const useProducts = () => {
       setError(null);
       
       // Check if Supabase is connected
-      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      if (!isSupabaseConnected) {
         console.log('Supabase not connected, using default products');
         setProducts(getDefaultProducts());
         return;
       }
       
+      // Test connection first
+      const isConnected = await ProductService.testConnection();
+      if (!isConnected) {
+        throw new Error('Database connection failed');
+      }
+
       const loadedProducts = await ProductService.getAllProducts();
       setProducts(loadedProducts);
+      
+      // If no products in database and this is the first load, don't fall back to defaults
+      // Let the admin add products manually or import them
+      console.log(`Loaded ${loadedProducts.length} products from database`);
+      
     } catch (error) {
       console.error('Error loading products:', error);
-      setError('Supabase not connected. Using default products.');
-      // Fallback to default products
-      setProducts(getDefaultProducts());
+      setError('Failed to connect to database. Using default products.');
+      // Only fall back to default products if Supabase is not connected
+      if (!isSupabaseConnected) {
+        setProducts(getDefaultProducts());
+      } else {
+        // If Supabase is connected but there's an error, show empty state
+        setProducts([]);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const addProduct = async (product: Omit<Chemical, 'id'>): Promise<boolean> => {
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    if (!isSupabaseConnected) {
       toast.error('Please connect to Supabase to add products to the database.');
       return false;
     }
@@ -66,7 +84,7 @@ export const useProducts = () => {
   };
 
   const updateProduct = async (id: number, updates: Partial<Omit<Chemical, 'id'>>): Promise<boolean> => {
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    if (!isSupabaseConnected) {
       toast.error('Please connect to Supabase to update products in the database.');
       return false;
     }
@@ -84,7 +102,7 @@ export const useProducts = () => {
   };
 
   const deleteProduct = async (id: number): Promise<boolean> => {
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    if (!isSupabaseConnected) {
       toast.error('Please connect to Supabase to delete products from the database.');
       return false;
     }
@@ -102,7 +120,7 @@ export const useProducts = () => {
   };
 
   const replaceAllProducts = async (newProducts: Omit<Chemical, 'id'>[]): Promise<boolean> => {
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    if (!isSupabaseConnected) {
       toast.error('Please connect to Supabase to import products to the database.');
       return false;
     }
@@ -181,8 +199,6 @@ export const useProducts = () => {
       quantity: "5 totes"
     }
   ];
-
-  const isSupabaseConnected = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
   return { 
     products, 

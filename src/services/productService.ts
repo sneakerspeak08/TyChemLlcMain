@@ -15,7 +15,7 @@ export class ProductService {
         throw error
       }
 
-      // Convert Supabase products to Chemical interface
+      // Always return the actual database data, even if empty
       return data.map(product => ({
         id: product.id,
         name: product.name,
@@ -105,6 +105,8 @@ export class ProductService {
         console.error('Error deleting product:', error)
         throw error
       }
+
+      console.log(`Successfully deleted product with id: ${id}`)
     } catch (error) {
       console.error('Failed to delete product from database:', error)
       throw error
@@ -123,6 +125,11 @@ export class ProductService {
       if (deleteError) {
         console.error('Error clearing products:', deleteError)
         throw deleteError
+      }
+
+      // If no products to insert, return empty array
+      if (products.length === 0) {
+        return []
       }
 
       // Then insert new products
@@ -151,6 +158,20 @@ export class ProductService {
     } catch (error) {
       console.error('Failed to replace products in database:', error)
       throw error
+    }
+  }
+
+  // Check if Supabase is properly connected
+  static async testConnection(): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .select('count', { count: 'exact', head: true })
+
+      return !error
+    } catch (error) {
+      console.error('Supabase connection test failed:', error)
+      return false
     }
   }
 
