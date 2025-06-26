@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Edit, Trash2, Save, X, Lock, Globe, AlertCircle, CheckCircle, ExternalLink, Download, Copy, Upload, FileText, Zap, RefreshCw, Database } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Lock, Globe, AlertCircle, CheckCircle, ExternalLink, Download, Copy, Upload, FileText, Zap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Chemical } from "@/data/products";
-import { downloadSitemap, copySitemapToClipboard } from "@/utils/sitemapGenerator";
+import { downloadSitemap, autoSaveSitemap, copySitemapToClipboard } from "@/utils/sitemapGenerator";
 import { useProducts } from "@/hooks/useProducts";
 
 const ADMIN_PASSWORD = "tychem2025";
@@ -90,11 +90,12 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
 
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { products, isLoading, error, addProduct, updateProduct, deleteProduct, replaceAllProducts, refreshProducts, isSupabaseConnected } = useProducts();
+  const { products, isLoading, deleteProduct, addProduct, updateProduct, refreshProducts } = useProducts();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Chemical | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [sitemapStatus, setSitemapStatus] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -107,6 +108,24 @@ const AdminPage = () => {
     if (isLoggedIn === 'true') {
       setIsAuthenticated(true);
     }
+  }, []);
+
+  // Listen for sitemap updates
+  useEffect(() => {
+    const handleSitemapReady = (event: any) => {
+      setSitemapStatus({
+        lastUpdated: event.detail.timestamp,
+        productCount: event.detail.productCount,
+        downloadUrl: event.detail.downloadUrl,
+        content: event.detail.content
+      });
+    };
+
+    window.addEventListener('sitemapReady', handleSitemapReady);
+    
+    return () => {
+      window.removeEventListener('sitemapReady', handleSitemapReady);
+    };
   }, []);
 
   const handleLogin = () => {
@@ -139,9 +158,9 @@ const AdminPage = () => {
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (confirm('Are you sure you want to delete this product? This will update the live website immediately.')) {
+    if (confirm('Are you sure you want to delete this product? This will remove it from the database permanently.')) {
       setIsSaving(true);
-      await deleteProduct(id);
+      const success = await deleteProduct(id);
       setIsSaving(false);
     }
   };
@@ -178,7 +197,7 @@ const AdminPage = () => {
   };
 
   const handleRefreshProducts = async () => {
-    toast.info('Refreshing products...');
+    toast.info('Refreshing products from database...');
     await refreshProducts();
     toast.success('Products refreshed!');
   };
@@ -205,30 +224,6 @@ const AdminPage = () => {
     toast.success('Products exported successfully');
   };
 
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const importedProducts = JSON.parse(e.target?.result as string);
-        if (Array.isArray(importedProducts)) {
-          setIsSaving(true);
-          // Remove id field from imported products since database will auto-generate
-          const productsToImport = importedProducts.map(({ id, ...product }) => product);
-          await replaceAllProducts(productsToImport);
-          setIsSaving(false);
-        } else {
-          toast.error('Invalid file format');
-        }
-      } catch (error) {
-        toast.error('Error reading file');
-      }
-    };
-    reader.readAsText(file);
-  };
-
   if (!isAuthenticated) {
     return <AdminLogin onLogin={handleLogin} />;
   }
@@ -238,7 +233,7 @@ const AdminPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-tychem-600" />
-          <p className="text-gray-600">Loading products...</p>
+          <p className="text-gray-600">Loading products from database...</p>
         </div>
       </div>
     );
@@ -250,12 +245,7 @@ const AdminPage = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">
-              {isSupabaseConnected 
-                ? "Manage your chemical inventory - changes update the live website and database instantly"
-                : "Managing local products - connect to Supabase for database persistence"
-              }
-            </p>
+            <p className="text-gray-600 mt-1">Manage your chemical inventory - changes update the database instantly</p>
           </div>
           <div className="flex gap-4">
             <Button onClick={handleRefreshProducts} variant="outline">
@@ -277,16 +267,6 @@ const AdminPage = () => {
           </div>
         </div>
 
-        {!isSupabaseConnected && (
-          <Alert className="mb-6">
-            <Database className="h-4 w-4" />
-            <AlertDescription>
-              <strong>⚠️ SUPABASE NOT CONNECTED:</strong> You're working with local data only. 
-              Click "Connect to Supabase" in the top right to enable database persistence and real-time updates.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <Tabs defaultValue="products" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="products">Product Management</TabsTrigger>
@@ -300,17 +280,6 @@ const AdminPage = () => {
                 <Button onClick={handleExportData} variant="outline">
                   Export Data
                 </Button>
-                <label className="cursor-pointer">
-                  <Button variant="outline" asChild>
-                    <span>Import Data</span>
-                  </Button>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportData}
-                    className="hidden"
-                  />
-                </label>
                 <Button 
                   onClick={handleAddProduct} 
                   className="bg-tychem-500 hover:bg-tychem-600"
@@ -322,29 +291,19 @@ const AdminPage = () => {
               </div>
             </div>
 
-            {isSupabaseConnected ? (
-              <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>🚀 DATABASE CONNECTED:</strong> All changes are saved to Supabase database and instantly update the live website! 
-                  Products are automatically synced across all users and the sitemap is regenerated.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>📱 LOCAL MODE:</strong> Changes are saved locally only. 
-                  Connect to Supabase for database persistence and real-time synchronization.
-                </AlertDescription>
-              </Alert>
-            )}
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>🚀 DATABASE CONNECTED:</strong> All changes are saved directly to the Supabase database! 
+                Products are synced in real-time across all pages.
+              </AlertDescription>
+            </Alert>
 
             {isSaving && (
               <Alert>
                 <RefreshCw className="h-4 w-4 animate-spin" />
                 <AlertDescription>
-                  <strong>Saving changes...</strong> {isSupabaseConnected ? "Updating the database and live website." : "Saving locally."}
+                  <strong>Saving changes...</strong> Updating the database with your changes.
                 </AlertDescription>
               </Alert>
             )}
@@ -397,7 +356,7 @@ const AdminPage = () => {
 
             {products.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-500 mb-4">No products found</p>
+                <p className="text-gray-500 mb-4">No products found in database</p>
                 <Button 
                   onClick={handleAddProduct} 
                   className="bg-tychem-500 hover:bg-tychem-600"
@@ -414,7 +373,7 @@ const AdminPage = () => {
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>🎯 AUTO-UPDATED!</strong> Your sitemap automatically includes all {products.length} products. 
+                <strong>🎯 AUTO-UPDATED!</strong> Your sitemap automatically includes all {products.length} products from the database. 
                 Download the latest version for manual submission to search engines.
               </AlertDescription>
             </Alert>
@@ -435,7 +394,7 @@ const AdminPage = () => {
                     </div>
                     <p className="text-sm text-blue-700 mb-4">
                       Your sitemap includes all {products.length} products with current URLs and dates. 
-                      This is automatically generated from your current product data.
+                      This is automatically generated from your live database.
                     </p>
                     
                     <div className="flex gap-3">
@@ -449,99 +408,31 @@ const AdminPage = () => {
                       </Button>
                     </div>
                   </div>
-                  
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2 text-green-800">📋 Submit to Search Engines:</h4>
-                    <ol className="text-sm text-green-700 space-y-1">
-                      <li>1. Download the sitemap above</li>
-                      <li>2. Go to Google Search Console</li>
-                      <li>3. Submit: https://tychem.net/sitemap.xml</li>
-                      <li>4. Repeat for Bing Webmaster Tools</li>
-                    </ol>
-                  </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>System Status</CardTitle>
+                  <CardTitle>Database Status</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Database Connection</span>
-                      <span className={`text-sm font-medium ${isSupabaseConnected ? 'text-green-600' : 'text-orange-600'}`}>
-                        {isSupabaseConnected ? '✅ Connected' : '⚠️ Not Connected'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Products Available</span>
+                      <span className="text-sm">Products in Database</span>
                       <span className="text-blue-600 text-sm font-medium">{products.length} items</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Data Source</span>
-                      <span className="text-gray-600 text-sm font-medium">
-                        {isSupabaseConnected ? 'Database' : 'Local/Default'}
-                      </span>
+                      <span className="text-sm">Database Connection</span>
+                      <span className="text-green-600 text-sm font-medium">✅ Connected</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">URLs Generated</span>
-                      <span className="text-green-600 text-sm">{products.length + 2} total</span>
+                      <span className="text-sm">Real-time Sync</span>
+                      <span className="text-green-600 text-sm">✅ Active</span>
                     </div>
-                  </div>
-
-                  <div className={`p-4 rounded-lg ${isSupabaseConnected ? 'bg-green-50' : 'bg-orange-50'}`}>
-                    <h4 className={`font-medium mb-2 ${isSupabaseConnected ? 'text-green-800' : 'text-orange-800'}`}>
-                      {isSupabaseConnected ? 'Database Features:' : 'Local Mode:'}
-                    </h4>
-                    <ul className={`text-sm space-y-1 ${isSupabaseConnected ? 'text-green-700' : 'text-orange-700'}`}>
-                      {isSupabaseConnected ? (
-                        <>
-                          <li>✅ Persistent storage (survives deployments)</li>
-                          <li>✅ Real-time synchronization</li>
-                          <li>✅ Automatic backups</li>
-                          <li>✅ Global accessibility</li>
-                          <li>✅ Row-level security</li>
-                        </>
-                      ) : (
-                        <>
-                          <li>⚠️ Local storage only</li>
-                          <li>⚠️ Changes reset on deployment</li>
-                          <li>⚠️ No real-time sync</li>
-                          <li>✅ Works offline</li>
-                          <li>✅ Fast local access</li>
-                        </>
-                      )}
-                    </ul>
                   </div>
                 </CardContent>
               </Card>
             </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Search Engine Submission</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <code className="text-sm text-gray-700">https://tychem.net/sitemap.xml</code>
-                    <Button 
-                      onClick={() => window.open('https://search.google.com/search-console', '_blank')} 
-                      size="sm" 
-                      variant="outline"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Open Search Console
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  📍 Submit this URL to Google Search Console and Bing Webmaster Tools. 
-                  Your sitemap automatically updates when you change products!
-                </p>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </div>
@@ -601,7 +492,7 @@ const AdminPage = () => {
                 ) : (
                   <Save className="h-4 w-4 mr-2" />
                 )}
-                {isSaving ? (isSupabaseConnected ? 'Saving to Database...' : 'Saving Locally...') : (isNewProduct ? 'Add Product' : 'Save Changes')}
+                {isSaving ? 'Saving...' : (isNewProduct ? 'Add Product' : 'Save Changes')}
               </Button>
             </div>
           </div>

@@ -1,41 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Declare the supabase variable at module level
-let supabase: any
-
-// Check if we're in development and missing env vars
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables not found. Using fallback mode.')
-  
-  // Create a mock client for development
-  const mockClient = {
-    from: () => ({
-      select: () => ({ data: [], error: null }),
-      insert: () => ({ data: null, error: new Error('Supabase not connected') }),
-      update: () => ({ data: null, error: new Error('Supabase not connected') }),
-      delete: () => ({ error: new Error('Supabase not connected') }),
-      eq: () => ({ data: null, error: new Error('Supabase not connected') }),
-      order: () => ({ data: [], error: null }),
-      single: () => ({ data: null, error: new Error('Supabase not connected') })
-    }),
-    channel: () => ({
-      on: () => ({ subscribe: () => ({ unsubscribe: () => {} }) })
-    })
-  }
-  
-  supabase = mockClient
-} else {
-  supabase = createClient(supabaseUrl, supabaseAnonKey)
+  throw new Error('Missing Supabase environment variables')
 }
 
-// Export at module level
-export { supabase }
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Types for our database
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       products: {
@@ -44,30 +18,26 @@ export interface Database {
           name: string
           description: string
           quantity: string
-          created_at: string
-          updated_at: string
+          created_at: string | null
+          updated_at: string | null
         }
         Insert: {
-          id?: never
+          id?: number
           name: string
           description: string
           quantity: string
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
-          id?: never
+          id?: number
           name?: string
           description?: string
           quantity?: string
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
+          updated_at?: string | null
         }
       }
     }
   }
 }
-
-export type Product = Database['public']['Tables']['products']['Row']
-export type ProductInsert = Database['public']['Tables']['products']['Insert']
-export type ProductUpdate = Database['public']['Tables']['products']['Update']
