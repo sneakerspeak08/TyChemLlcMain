@@ -392,7 +392,7 @@ const AdminPage = () => {
               <FileText className="h-4 w-4" />
               <AlertDescription>
                 <strong>📁 Import/Export:</strong> Export your products as JSON for backup, or import a JSON file to replace all products. 
-                Import format: <code>[{"name": "Product Name", "description": "Description", "quantity": "Amount"}]</code>
+                Import format: <code>[&#123;"name": "Product Name", "description": "Description", "quantity": "Amount"&#125;]</code>
               </AlertDescription>
             </Alert>
 

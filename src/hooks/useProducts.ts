@@ -25,9 +25,8 @@ export const useProducts = () => {
         return;
       }
 
-      if (data) {
-        setProducts(data);
-      }
+      // Ensure products is always an array, even if data is null or undefined
+      setProducts(data || []);
     } catch (error) {
       console.error('Error loading products:', error);
       toast.error('Failed to load products');
