@@ -11,26 +11,35 @@ export const useProducts = () => {
   useEffect(() => {
     loadProducts();
     
-    // Subscribe to real-time updates
-    const subscription = ProductService.subscribeToProducts((updatedProducts) => {
-      setProducts(updatedProducts);
-    });
+    // Only subscribe to real-time updates if Supabase is connected
+    if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      const subscription = ProductService.subscribeToProducts((updatedProducts) => {
+        setProducts(updatedProducts);
+      });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
   }, []);
 
   const loadProducts = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Check if Supabase is connected
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        console.log('Supabase not connected, using default products');
+        setProducts(getDefaultProducts());
+        return;
+      }
+      
       const loadedProducts = await ProductService.getAllProducts();
       setProducts(loadedProducts);
     } catch (error) {
       console.error('Error loading products:', error);
-      setError('Failed to load products from database');
-      toast.error('Failed to load products. Please check your connection.');
+      setError('Supabase not connected. Using default products.');
       // Fallback to default products
       setProducts(getDefaultProducts());
     } finally {
@@ -39,10 +48,15 @@ export const useProducts = () => {
   };
 
   const addProduct = async (product: Omit<Chemical, 'id'>): Promise<boolean> => {
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      toast.error('Please connect to Supabase to add products to the database.');
+      return false;
+    }
+
     try {
       const newProduct = await ProductService.addProduct(product);
       setProducts(prev => [...prev, newProduct]);
-      toast.success('✅ Product added globally! Changes are live on the website.');
+      toast.success('✅ Product added to database! Changes are live on the website.');
       return true;
     } catch (error) {
       console.error('Error adding product:', error);
@@ -52,10 +66,15 @@ export const useProducts = () => {
   };
 
   const updateProduct = async (id: number, updates: Partial<Omit<Chemical, 'id'>>): Promise<boolean> => {
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      toast.error('Please connect to Supabase to update products in the database.');
+      return false;
+    }
+
     try {
       const updatedProduct = await ProductService.updateProduct(id, updates);
       setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
-      toast.success('✅ Product updated globally! Changes are live on the website.');
+      toast.success('✅ Product updated in database! Changes are live on the website.');
       return true;
     } catch (error) {
       console.error('Error updating product:', error);
@@ -65,10 +84,15 @@ export const useProducts = () => {
   };
 
   const deleteProduct = async (id: number): Promise<boolean> => {
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      toast.error('Please connect to Supabase to delete products from the database.');
+      return false;
+    }
+
     try {
       await ProductService.deleteProduct(id);
       setProducts(prev => prev.filter(p => p.id !== id));
-      toast.success('✅ Product deleted globally! Changes are live on the website.');
+      toast.success('✅ Product deleted from database! Changes are live on the website.');
       return true;
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -78,10 +102,15 @@ export const useProducts = () => {
   };
 
   const replaceAllProducts = async (newProducts: Omit<Chemical, 'id'>[]): Promise<boolean> => {
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      toast.error('Please connect to Supabase to import products to the database.');
+      return false;
+    }
+
     try {
       const replacedProducts = await ProductService.replaceAllProducts(newProducts);
       setProducts(replacedProducts);
-      toast.success('✅ Products imported globally! Changes are live on the website.');
+      toast.success('✅ Products imported to database! Changes are live on the website.');
       return true;
     } catch (error) {
       console.error('Error replacing products:', error);
@@ -153,14 +182,17 @@ export const useProducts = () => {
     }
   ];
 
+  const isSupabaseConnected = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+
   return { 
     products, 
     isLoading, 
-    error,
+    error: isSupabaseConnected ? error : null,
     addProduct,
     updateProduct,
     deleteProduct,
     replaceAllProducts,
-    refreshProducts: loadProducts 
+    refreshProducts: loadProducts,
+    isSupabaseConnected
   };
 };

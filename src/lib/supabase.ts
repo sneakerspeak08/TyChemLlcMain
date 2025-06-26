@@ -3,11 +3,30 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// Check if we're in development and missing env vars
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please connect to Supabase first.')
+  console.warn('Supabase environment variables not found. Using fallback mode.')
+  
+  // Create a mock client for development
+  const mockClient = {
+    from: () => ({
+      select: () => ({ data: [], error: null }),
+      insert: () => ({ data: null, error: new Error('Supabase not connected') }),
+      update: () => ({ data: null, error: new Error('Supabase not connected') }),
+      delete: () => ({ error: new Error('Supabase not connected') }),
+      eq: () => ({ data: null, error: new Error('Supabase not connected') }),
+      order: () => ({ data: [], error: null }),
+      single: () => ({ data: null, error: new Error('Supabase not connected') })
+    }),
+    channel: () => ({
+      on: () => ({ subscribe: () => ({ unsubscribe: () => {} }) })
+    })
+  }
+  
+  export const supabase = mockClient as any
+} else {
+  export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 }
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Types for our database
 export interface Database {
