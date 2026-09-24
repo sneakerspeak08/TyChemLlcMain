@@ -26,7 +26,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
     setTimeout(() => {
       if (password === ADMIN_PASSWORD) {
         onLogin();
-        toast.success("Welcome to admin panel");
+        toast.success("Welcome to the admin panel");
       } else {
         toast.error("Invalid password");
         setPassword("");
