@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Chemical } from "@/data/products";
-import { downloadSitemap, autoSaveSitemap, copySitemapToClipboard } from "@/utils/sitemapGenerator";
 import { useProducts } from "@/hooks/useProducts";
 
 const ADMIN_PASSWORD = "tychem2025";
@@ -95,7 +94,6 @@ const AdminPage = () => {
   const [editingProduct, setEditingProduct] = useState<Chemical | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [sitemapStatus, setSitemapStatus] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -109,24 +107,6 @@ const AdminPage = () => {
     if (isLoggedIn === 'true') {
       setIsAuthenticated(true);
     }
-  }, []);
-
-  // Listen for sitemap updates
-  useEffect(() => {
-    const handleSitemapReady = (event: any) => {
-      setSitemapStatus({
-        lastUpdated: event.detail.timestamp,
-        productCount: event.detail.productCount,
-        downloadUrl: event.detail.downloadUrl,
-        content: event.detail.content
-      });
-    };
-
-    window.addEventListener('sitemapReady', handleSitemapReady);
-    
-    return () => {
-      window.removeEventListener('sitemapReady', handleSitemapReady);
-    };
   }, []);
 
   const handleLogin = () => {
@@ -201,16 +181,6 @@ const AdminPage = () => {
     toast.info('Refreshing products from database...');
     await refreshProducts();
     toast.success('Products refreshed!');
-  };
-
-  const handleDownloadSitemap = () => {
-    downloadSitemap(products);
-    toast.success('Sitemap downloaded! This includes all current products.');
-  };
-
-  const handleCopySitemap = async () => {
-    await copySitemapToClipboard(products);
-    toast.success('Sitemap XML copied to clipboard!');
   };
 
   const handleExportData = () => {
@@ -498,44 +468,12 @@ const AdminPage = () => {
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>🎯 AUTO-UPDATED!</strong> Your sitemap automatically includes all {products.length} products from the database. 
-                Download the latest version for manual submission to search engines.
+                <strong>Automatic.</strong> Every time the site publishes, it rebuilds the sitemap and a page for each of the {products.length} products,
+                at tychem.net/sitemap.xml. Search engines read it from there; there is nothing to download or submit by hand.
               </AlertDescription>
             </Alert>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Download className="h-5 w-5 mr-2 text-blue-600" />
-                    Download Current Sitemap
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <div className="flex items-center mb-2">
-                      <FileText className="h-5 w-5 text-blue-600 mr-2" />
-                      <h4 className="font-medium text-blue-800">Ready to Download!</h4>
-                    </div>
-                    <p className="text-sm text-blue-700 mb-4">
-                      Your sitemap includes all {products.length} products with current URLs and dates. 
-                      This is automatically generated from your live database.
-                    </p>
-                    
-                    <div className="flex gap-3">
-                      <Button onClick={handleDownloadSitemap} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download sitemap.xml
-                      </Button>
-                      <Button onClick={handleCopySitemap} variant="outline" className="flex-1">
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy XML
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle>Database Status</CardTitle>

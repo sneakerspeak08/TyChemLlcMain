@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
@@ -7,41 +7,41 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { OfferDialog } from "@/components/OfferDialog";
 import { useProducts } from "@/hooks/useProducts";
+import { findProductBySlug, productPath } from "@/lib/productUrl";
+import { usePageMeta } from "@/lib/seo";
+import NotFound from "@/pages/NotFound";
 
 const ProductDetail = () => {
-  const { cas } = useParams();
+  const { slug = "" } = useParams();
   const navigate = useNavigate();
-  const { products } = useProducts();
-  const product = products.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === cas);
+  const { products, isLoading } = useProducts();
+  const product = findProductBySlug(products, slug);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  // An old or out-of-date address: move to the product's permanent one.
   useEffect(() => {
-    if (products.length > 0 && !product) {
-      navigate("/products");
+    if (product && productPath(product) !== `/products/${slug}`) {
+      navigate(productPath(product), { replace: true });
     }
-  }, [product, navigate, products]);
+  }, [product, slug, navigate]);
 
-  // Update meta tags
-  useEffect(() => {
-    if (product) {
-      document.title = `${product.name} | Tychem LLC`;
-      
-      // Update meta description
-      let metaDescription = document.querySelector('meta[name="description"]');
-      if (!metaDescription) {
-        metaDescription = document.createElement('meta');
-        metaDescription.setAttribute('name', 'description');
-        document.head.appendChild(metaDescription);
-      }
-      metaDescription.setAttribute('content', 
-        `${product.name} - ${product.description} Available at Tychem LLC.`
-      );
-    }
-  }, [product]);
+  usePageMeta(
+    product
+      ? {
+          title: `${product.name} | Surplus Chemical | Tychem LLC`,
+          description: productDescription(product.name, product.quantity, product.description),
+          path: productPath(product),
+        }
+      : { title: "Page not found | Tychem LLC", description: "This product is no longer listed.", noindex: true }
+  );
+
+  if (!product && !isLoading) {
+    return <NotFound />;
+  }
 
   if (!product) {
     return (
@@ -66,13 +66,11 @@ const ProductDetail = () => {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-4xl mx-auto mb-6">
-            <Button
-              variant="ghost"
-              className="mb-4 text-gray-600 hover:text-gray-900"
-              onClick={() => navigate("/products")}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Back to Products
+            <Button asChild variant="ghost" className="mb-4 text-gray-600 hover:text-gray-900">
+              <Link to="/products">
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Back to Products
+              </Link>
             </Button>
           </div>
 
@@ -121,6 +119,13 @@ const ProductDetail = () => {
       />
     </div>
   );
+};
+
+// Search results show about 155 characters; lead with what a buyer searches for.
+// Keep in step with productDescription in scripts/prerender.mjs.
+const productDescription = (name: string, quantity: string, description: string) => {
+  const text = `${name}, ${quantity} available as surplus from Tychem LLC. ${description}`.replace(/\s+/g, " ").trim();
+  return text.length > 155 ? `${text.slice(0, 152).trimEnd()}...` : text;
 };
 
 export default ProductDetail;

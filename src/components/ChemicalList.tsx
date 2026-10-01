@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { productPath } from "@/lib/productUrl";
 import { Button } from "@/components/ui/button";
 import { OfferDialog } from "./OfferDialog";
 import { Chemical } from "@/data/products";
@@ -22,7 +23,7 @@ const ChemicalList = () => {
   };
 
   const handleCardClick = (chemical: Chemical) => {
-    navigate(`/products/${chemical.name.toLowerCase().replace(/\s+/g, '-')}`);
+    navigate(productPath(chemical));
   };
 
   // Show loading state
@@ -68,7 +69,11 @@ const ChemicalList = () => {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-xl font-bold">{chemical.name}</h3>
+                      <h3 className="text-xl font-bold">
+                        <Link to={productPath(chemical)} onClick={(e) => e.stopPropagation()} className="hover:text-tychem-600">
+                          {chemical.name}
+                        </Link>
+                      </h3>
                     </div>
                     <div className="text-right">
                       <span className="inline-block px-3 py-1 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">

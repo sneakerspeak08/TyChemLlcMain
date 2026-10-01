@@ -1,8 +1,10 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { usePageMeta } from "@/lib/seo";
 
 const NotFound = () => {
   const location = useLocation();
+  usePageMeta({ title: "Page not found | Tychem LLC", description: "This page could not be found.", noindex: true });
 
   useEffect(() => {
     console.error(

@@ -3,9 +3,13 @@ import { Chemical } from '@/data/products';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+// The product list scripts/prerender.mjs bakes into each page at build time, so
+// the first paint already shows products instead of a loading message.
+const embeddedProducts = (window as Window & { __TYCHEM_PRODUCTS__?: Chemical[] }).__TYCHEM_PRODUCTS__;
+
 export const useProducts = () => {
-  const [products, setProducts] = useState<Chemical[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState<Chemical[]>(embeddedProducts ?? []);
+  const [isLoading, setIsLoading] = useState(!embeddedProducts);
 
   useEffect(() => {
     loadProducts();
@@ -13,7 +17,6 @@ export const useProducts = () => {
 
   const loadProducts = async () => {
     try {
-      setIsLoading(true);
       const { data, error } = await supabase
         .from('products')
         .select('*')

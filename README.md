@@ -98,3 +98,24 @@ The site is optimized for deployment on modern hosting platforms like Netlify, V
 ## License
 
 © 2025 TYCHEM LLC. All rights reserved.
+## Search engines: product pages and sitemap
+
+`npm run build` runs `vite build` and then `scripts/prerender.mjs`, which reads the
+products from Supabase and writes a real HTML page for `/`, `/products` and every
+product (`/products/<id>-<name>`), plus `sitemap.xml` and `_redirects`. Search
+engines read those pages directly instead of waiting for the app to draw them.
+
+The build needs `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (in Netlify's
+environment variables, or `.env` locally). It fails rather than publish a site
+with no products if Supabase can't be read.
+
+Product pages are only as fresh as the last build. To rebuild whenever a product
+changes:
+
+1. Netlify: Site configuration > Build & deploy > Build hooks > Add build hook. Copy the URL.
+2. Supabase: Database > Webhooks > Create a new hook on the `products` table, for
+   Insert, Update and Delete, type HTTP Request, method POST, URL = the build hook.
+
+A product's address is `<id>-<name>`, so renaming a product keeps its link working.
+The admin panel's JSON import deletes and re-adds every product, which gives each
+one a new id; avoid it, or expect every product address to change.

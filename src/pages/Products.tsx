@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -9,8 +9,8 @@ import Footer from "@/components/Footer";
 import { OfferDialog } from "@/components/OfferDialog";
 import { Chemical } from "@/data/products";
 import { useProducts } from "@/hooks/useProducts";
-import { useSitemapNotification } from "@/hooks/useSitemapNotification";
-import SEOProductData from "@/components/SEOProductData";
+import { productPath } from "@/lib/productUrl";
+import { usePageMeta } from "@/lib/seo";
 
 const ProductsPage = () => {
   const location = useLocation();
@@ -20,24 +20,17 @@ const ProductsPage = () => {
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
-  // Use the automatic sitemap notification system
-  useSitemapNotification();
+  usePageMeta({
+    title: "Chemical Products | Surplus Industrial Chemicals | Tychem LLC",
+    description: "Browse our inventory of surplus industrial chemicals. Contact Tychem LLC for pricing and availability.",
+    path: "/products",
+  });
 
   // Ensure products is always an array
   const safeProducts = Array.isArray(products) ? products : [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    
-    // Set page title and meta description
-    document.title = "Chemical Products | Surplus Industrial Chemicals | Tychem LLC";
-    
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', 
-        'Browse our inventory of surplus industrial chemicals including sodium hydroxide, citric acid, glycerin, and more. Contact Tychem LLC for pricing and availability.'
-      );
-    }
   }, []);
 
   useEffect(() => {
@@ -66,7 +59,7 @@ const ProductsPage = () => {
   };
 
   const handleCardClick = (chemical: Chemical) => {
-    navigate(`/products/${chemical.name.toLowerCase().replace(/\s+/g, '-')}`);
+    navigate(productPath(chemical));
   };
 
   const handleContactClick = () => {
@@ -91,7 +84,6 @@ const ProductsPage = () => {
 
   return (
     <>
-      <SEOProductData />
       <div className="min-h-screen bg-gray-50">
         <Navbar transparent={false} />
         
@@ -141,7 +133,11 @@ const ProductsPage = () => {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h2 className="text-xl font-bold" itemProp="name">{chemical.name}</h2>
+                      <h2 className="text-xl font-bold" itemProp="name">
+                        <Link to={productPath(chemical)} onClick={(e) => e.stopPropagation()} className="hover:text-tychem-600">
+                          {chemical.name}
+                        </Link>
+                      </h2>
                     </div>
                     <div className="text-right">
                       <span className="inline-block px-3 py-1 rounded-lg text-sm font-medium bg-blue-50 text-blue-700" itemProp="offers" itemScope itemType="https://schema.org/Offer">

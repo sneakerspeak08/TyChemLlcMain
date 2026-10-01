@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { productPath } from '@/lib/productUrl';
 import { useProducts } from '@/hooks/useProducts';
 
 const ChemicalTicker = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const navigate = useNavigate();
   const { products } = useProducts();
 
   // Ensure products is always an array
@@ -31,10 +31,6 @@ const ChemicalTicker = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleChemicalClick = (name: string) => {
-    navigate(`/products/${name.toLowerCase().replace(/\s+/g, '-')}`);
-  };
-
   // Don't render if no products
   if (safeProducts.length === 0) {
     return null;
@@ -52,27 +48,29 @@ const ChemicalTicker = () => {
           <div className="relative overflow-hidden">
             <div className="flex animate-[ticker_60s_linear_infinite] whitespace-nowrap">
               {safeProducts.map((chemical, index) => (
-                <button
+                <Link
                   key={`${chemical.id}-${index}`}
-                  onClick={() => handleChemicalClick(chemical.name)}
+                  to={productPath(chemical)}
                   className="inline-flex items-center mx-6 text-white/80 text-xs hover:text-white transition-colors duration-200 cursor-pointer"
                 >
                   <span className="font-medium">{chemical.name}</span>
                   <span className="mx-1.5">•</span>
                   <span className="opacity-80">{chemical.quantity}</span>
-                </button>
+                </Link>
               ))}
               {/* Duplicate for seamless loop */}
               {safeProducts.map((chemical, index) => (
-                <button
+                <Link
                   key={`${chemical.id}-${index}-duplicate`}
-                  onClick={() => handleChemicalClick(chemical.name)}
+                  to={productPath(chemical)}
+                  tabIndex={-1}
+                  aria-hidden="true"
                   className="inline-flex items-center mx-6 text-white/80 text-xs hover:text-white transition-colors duration-200 cursor-pointer"
                 >
                   <span className="font-medium">{chemical.name}</span>
                   <span className="mx-1.5">•</span>
                   <span className="opacity-80">{chemical.quantity}</span>
-                </button>
+                </Link>
               ))}
             </div>
           </div>
