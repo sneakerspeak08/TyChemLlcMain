@@ -1,8 +1,11 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Menu, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
 interface NavLink {
   label: string;
@@ -22,8 +25,8 @@ interface NavbarProps {
 const Navbar = ({ transparent = true }: NavbarProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,7 +43,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
     if (href.startsWith("/#")) {
       const sectionId = href.substring(2); // Remove "/#" to get section id
       
-      if (location.pathname === '/') {
+      if (pathname === '/') {
         // Already on home page, just scroll to section
         const element = document.getElementById(sectionId);
         if (element) {
@@ -55,17 +58,17 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
         }
       } else {
         // On different page, navigate to home with section target
-        navigate('/', { state: { scrollToSection: sectionId } });
+        router.push(`/#${sectionId}`);
       }
     } else {
       // Regular navigation
-      navigate(href);
+      router.push(href);
     }
   };
 
   const handleHomeClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (location.pathname === '/') {
+    if (pathname === '/') {
       // If already on home page, scroll to top
       window.scrollTo({
         top: 0,
@@ -73,7 +76,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
       });
     } else {
       // If on another page, navigate to home
-      navigate('/');
+      router.push('/');
     }
     setIsMenuOpen(false);
   };
@@ -82,7 +85,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
     e.preventDefault();
     setIsMenuOpen(false);
     
-    if (location.pathname === '/') {
+    if (pathname === '/') {
       // Already on home page, just scroll to contact section
       const element = document.getElementById('contact');
       if (element) {
@@ -97,7 +100,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
       }
     } else {
       // On different page, navigate to home with contact target
-      navigate('/', { state: { scrollToSection: 'contact' } });
+      router.push('/#contact');
     }
   };
 
@@ -126,7 +129,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
               {navLinks.map((link) => (
                 <Link 
                   key={link.href} 
-                  to={link.href}
+                  href={link.href}
                   onClick={(e) => {
                     if (link.label === "Home") {
                       handleHomeClick(e);
@@ -203,7 +206,7 @@ const Navbar = ({ transparent = true }: NavbarProps) => {
                     transition={{ duration: 0.3 }}
                   >
                     <Link
-                      to={link.href}
+                      href={link.href}
                       onClick={(e) => {
                         if (link.label === "Home") {
                           handleHomeClick(e);

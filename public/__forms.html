@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="robots" content="noindex" /><title>Forms</title></head>
+  <body>
+    <!-- Netlify Forms reads these at deploy time. The contact and offer forms
+         fall back to them when Web3Forms is unavailable (src/lib/email.ts). -->
+    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="company" />
+      <textarea name="message"></textarea>
+      <input type="text" name="form_type" />
+      <input type="text" name="submitted_at" />
+    </form>
+    <form name="offer" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="companyName" />
+      <input type="text" name="contactName" />
+      <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <input type="text" name="offerPrice" />
+      <textarea name="comments"></textarea>
+      <input type="text" name="productName" />
+      <input type="text" name="form_type" />
+      <input type="text" name="submitted_at" />
+    </form>
+  </body>
+</html>

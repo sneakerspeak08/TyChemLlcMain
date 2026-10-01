@@ -13,7 +13,6 @@ export const slugify = (text: string) =>
 // A product's permanent address is "<id>-<name>". The id is what identifies the
 // product, so renaming it, or listing two products with the same name, never
 // breaks a link. The name part is there for people and search engines.
-// Keep in step with scripts/prerender.mjs, which writes these pages at build time.
 export const productSlug = (product: ProductRef) => `${product.id}-${slugify(product.name)}`;
 
 export const productPath = (product: ProductRef) => `/products/${productSlug(product)}`;

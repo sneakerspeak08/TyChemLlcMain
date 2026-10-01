@@ -85,7 +85,9 @@ const submitToNetlifyForms = async (formData: FormData, type: 'contact' | 'offer
     form.append('form_type', type);
     form.append('submitted_at', new Date().toISOString());
 
-    const response = await fetch('/', {
+    // Netlify only accepts form posts to a static page that declares the form,
+    // which a Next.js site needs as a separate file (public/__forms.html).
+    const response = await fetch('/__forms.html', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams(form as any).toString()

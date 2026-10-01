@@ -1,12 +1,13 @@
+"use client";
+
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
+import type { Chemical } from '@/data/products';
 import { productPath } from '@/lib/productUrl';
-import { useProducts } from '@/hooks/useProducts';
 
-const ChemicalTicker = () => {
+const ChemicalTicker = ({ products }: { products: Chemical[] }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const { products } = useProducts();
 
   // Ensure products is always an array
   const safeProducts = Array.isArray(products) ? products : [];
@@ -50,7 +51,7 @@ const ChemicalTicker = () => {
               {safeProducts.map((chemical, index) => (
                 <Link
                   key={`${chemical.id}-${index}`}
-                  to={productPath(chemical)}
+                  href={productPath(chemical)}
                   className="inline-flex items-center mx-6 text-white/80 text-xs hover:text-white transition-colors duration-200 cursor-pointer"
                 >
                   <span className="font-medium">{chemical.name}</span>
@@ -62,7 +63,7 @@ const ChemicalTicker = () => {
               {safeProducts.map((chemical, index) => (
                 <Link
                   key={`${chemical.id}-${index}-duplicate`}
-                  to={productPath(chemical)}
+                  href={productPath(chemical)}
                   tabIndex={-1}
                   aria-hidden="true"
                   className="inline-flex items-center mx-6 text-white/80 text-xs hover:text-white transition-colors duration-200 cursor-pointer"

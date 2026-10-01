@@ -1,15 +1,16 @@
+"use client";
+
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { productPath } from "@/lib/productUrl";
 import { Button } from "@/components/ui/button";
 import { OfferDialog } from "./OfferDialog";
 import { Chemical } from "@/data/products";
-import { useProducts } from "@/hooks/useProducts";
 
-const ChemicalList = () => {
-  const navigate = useNavigate();
-  const { products, isLoading } = useProducts();
+const ChemicalList = ({ products }: { products: Chemical[] }) => {
+  const router = useRouter();
   const [selectedChemical, setSelectedChemical] = useState<Chemical | null>(null);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
 
@@ -23,21 +24,8 @@ const ChemicalList = () => {
   };
 
   const handleCardClick = (chemical: Chemical) => {
-    navigate(productPath(chemical));
+    router.push(productPath(chemical));
   };
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <section id="chemicals" className="py-12 md:py-16 bg-gray-50">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center">
-            <p className="text-gray-600">Loading latest chemicals...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <>
@@ -70,7 +58,7 @@ const ChemicalList = () => {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-bold">
-                        <Link to={productPath(chemical)} onClick={(e) => e.stopPropagation()} className="hover:text-tychem-600">
+                        <Link href={productPath(chemical)} onClick={(e) => e.stopPropagation()} className="hover:text-tychem-600">
                           {chemical.name}
                         </Link>
                       </h3>
